@@ -305,19 +305,6 @@ export class OwnerWithdrawalsService {
     });
   }
 
-  // ───────────────────────────────────────────────────────────
-  // Delete — عكس وليس حذف فعلي (schema rule #6)
-  // ───────────────────────────────────────────────────────────
-  async delete(
-    id: string,
-    userId: string,
-    req: { ip?: string; userAgent?: string },
-  ): Promise<{ success: boolean }> {
-    await this.reverse(id, { reason: 'حذف من الواجهة' }, userId, req);
-
-    return { success: true };
-  }
-
   private toOwnerWithdrawal(row: {
     id: string;
     amount: Prisma.Decimal;

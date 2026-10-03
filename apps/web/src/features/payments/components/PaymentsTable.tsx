@@ -1,4 +1,4 @@
-import { CreditCard, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { CreditCard, MoreHorizontal, Pencil, RotateCcw } from 'lucide-react';
 import type { Payment } from '@prince-net/types';
 import {
   Table,
@@ -27,7 +27,7 @@ interface PaymentsTableProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   onEdit: (payment: Payment) => void;
-  onDelete: (payment: Payment) => void;
+  onReverse: (payment: Payment) => void;
 }
 
 export function PaymentsTable({
@@ -36,7 +36,7 @@ export function PaymentsTable({
   totalPages,
   onPageChange,
   onEdit,
-  onDelete,
+  onReverse,
 }: PaymentsTableProps) {
   if (data.length === 0) {
     return (
@@ -96,10 +96,10 @@ export function PaymentsTable({
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive"
-                          onClick={() => onDelete(payment)}
+                          onClick={() => onReverse(payment)}
                         >
-                          <Trash2 className="me-2 h-4 w-4" />
-                          حذف
+                          <RotateCcw className="me-2 h-4 w-4" />
+                          عكس
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

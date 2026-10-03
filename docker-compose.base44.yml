@@ -45,7 +45,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.base44
-    volumes: *app-volumes
+    # Cannot extend a YAML alias — explicit list = app-volumes + backups volume.
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+      - api_node_modules:/app/apps/api/node_modules
+      - web_node_modules:/app/apps/web/node_modules
+      - pkg_types:/app/packages/types/node_modules
+      - pkg_validation:/app/packages/validation/node_modules
+      - pkg_config:/app/packages/config/node_modules
+      - backups:/tmp/prince-net-backups
     env_file:
       - ./.env.base44-defaults
       - /run/base44/app.env
@@ -101,3 +110,4 @@ volumes:
   pkg_types:
   pkg_validation:
   pkg_config:
+  backups:

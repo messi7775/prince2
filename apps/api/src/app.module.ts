@@ -21,7 +21,7 @@ import { ExpenseCategoriesModule } from './expense-categories/expense-categories
 import { OwnerWithdrawalsModule } from './owner-withdrawals/owner-withdrawals.module';
 import { ReportsModule } from './reports/reports.module';
 import { SearchModule } from './search/search.module';
-import { BackupsModule } from './backupss/backups.module';
+import { BackupsModule } from './backups/backups.module';
 import { SettingsModule } from './settings/settings.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { HealthModule } from './health/health.module';

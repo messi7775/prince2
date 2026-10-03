@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -63,19 +62,6 @@ export class PaymentsController {
     @Req() req: Request,
   ) {
     return this.paymentsService.update(id, body, user.userId, {
-      ip: req.ip,
-      userAgent: req.get('user-agent'),
-    });
-  }
-
-  @Delete('payments/:id')
-  @HttpCode(HttpStatus.OK)
-  async delete(
-    @Param('id') id: string,
-    @CurrentUser() user: AuthUser,
-    @Req() req: Request,
-  ) {
-    return this.paymentsService.delete(id, user.userId, {
       ip: req.ip,
       userAgent: req.get('user-agent'),
     });

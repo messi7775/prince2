@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, Printer, Trash2, TrendingDown } from 'lucide-react';
+import { MoreHorizontal, Pencil, Printer, RotateCcw, TrendingDown } from 'lucide-react';
 import type { Expense, ExpenseCategory } from '@prince-net/types';
 import {
   Table,
@@ -24,7 +24,7 @@ interface ExpensesTableProps {
   data: Expense[];
   categories: ExpenseCategory[];
   onEdit: (expense: Expense) => void;
-  onDelete: (expense: Expense) => void;
+  onReverse: (expense: Expense) => void;
   onPrint: (expense: Expense) => void;
 }
 
@@ -32,7 +32,7 @@ export function ExpensesTable({
   data,
   categories,
   onEdit,
-  onDelete,
+  onReverse,
   onPrint,
 }: ExpensesTableProps) {
   if (data.length === 0) {
@@ -105,10 +105,10 @@ export function ExpensesTable({
                       {isActive && (
                         <DropdownMenuItem
                           className="text-destructive"
-                          onClick={() => onDelete(expense)}
+                          onClick={() => onReverse(expense)}
                         >
-                          <Trash2 className="me-2 h-4 w-4" />
-                          حذف
+                          <RotateCcw className="me-2 h-4 w-4" />
+                          عكس
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>

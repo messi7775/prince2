@@ -385,27 +385,6 @@ export class PaymentsService {
   }
 
   // ───────────────────────────────────────────────────────────
-  // Delete payment — عكس وليس حذف فعلي
-  // ───────────────────────────────────────────────────────────
-  // قاعدة ثابتة (schema rule #6): لا حذف فعلي للسجلات المالية —
-  // يُستخدم status = REVERSED. لذلك DELETE يعادل عكسًا بسبب افتراضي،
-  // مع إنشاء حركة نقدية معاكسة (OUT) تحافظ على سلامة الصندوق.
-  async delete(
-    paymentId: string,
-    userId: string,
-    req: { ip?: string; userAgent?: string },
-  ): Promise<{ success: boolean }> {
-    await this.reverse(
-      paymentId,
-      { reason: 'حذف من الواجهة' },
-      userId,
-      req,
-    );
-
-    return { success: true };
-  }
-
-  // ───────────────────────────────────────────────────────────
   // Helpers
   // ───────────────────────────────────────────────────────────
   private toPayment(row: {

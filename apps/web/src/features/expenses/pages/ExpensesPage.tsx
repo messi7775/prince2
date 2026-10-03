@@ -8,16 +8,15 @@ import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Pagination } from '../../../components/ui/pagination';
 import { useToast } from '../../../components/ui/use-toast';
-import { ConfirmDialog } from '../../../components/feedback/ConfirmDialog';
 import { useExpenseCategories } from '../../expense-categories/hooks/useExpenseCategories';
 import { ExpenseCategoriesDialog } from '../../expense-categories/components/ExpenseCategoriesDialog';
 import { useExpenses } from '../hooks/useExpenses';
 import { useCreateExpense } from '../hooks/useCreateExpense';
 import { useUpdateExpense } from '../hooks/useUpdateExpense';
-import { useDeleteExpense } from '../hooks/useDeleteExpense';
 import { ExpensesFilters } from '../components/ExpensesFilters';
 import { ExpensesTable } from '../components/ExpensesTable';
 import { ExpenseFormDialog } from '../components/ExpenseFormDialog';
+import { ReverseExpenseDialog } from '../components/ReverseExpenseDialog';
 import { printHTML, buildExpenseReceipt } from '../../../lib/print';
 import { formatMoney } from '../../../lib/currency';
 import { formatDate } from '../../../lib/format';
@@ -38,7 +37,7 @@ export function ExpensesPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Expense | null>(null);
+  const [reverseTarget, setReverseTarget] = useState<Expense | null>(null);
 
   const categoriesQuery = useExpenseCategories();
 
@@ -53,7 +52,6 @@ export function ExpensesPage() {
 
   const createMutation = useCreateExpense();
   const updateMutation = useUpdateExpense();
-  const deleteMutation = useDeleteExpense();
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const handleCreate = () => {
@@ -81,21 +79,6 @@ export function ExpensesPage() {
       toast({
         variant: 'destructive',
         title: 'فشل الحفظ',
-        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
-      });
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    try {
-      await deleteMutation.mutateAsync(deleteTarget.id);
-      toast({ title: 'تم الحذف' });
-      setDeleteTarget(null);
-    } catch (err) {
-      toast({
-        variant: 'destructive',
-        title: 'فشل الحذف',
         description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
       });
     }
@@ -176,7 +159,7 @@ export function ExpensesPage() {
             data={data.data}
             categories={categoriesQuery.data ?? []}
             onEdit={handleEdit}
-            onDelete={setDeleteTarget}
+            onReverse={setReverseTarget}
             onPrint={handlePrint}
           />
           {totalPages > 1 && (
@@ -200,15 +183,10 @@ export function ExpensesPage() {
         isSubmitting={isSubmitting}
       />
 
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
-        onConfirm={handleDelete}
-        title="حذف المصروف"
-        description={`سيتم حذف "${deleteTarget?.description ?? ''}" نهائيًا. هل أنت متأكد؟`}
-        confirmLabel="حذف"
-        variant="destructive"
-        isLoading={deleteMutation.isPending}
+      <ReverseExpenseDialog
+        open={!!reverseTarget}
+        onOpenChange={(open) => !open && setReverseTarget(null)}
+        expense={reverseTarget}
       />
 
       <ExpenseCategoriesDialog

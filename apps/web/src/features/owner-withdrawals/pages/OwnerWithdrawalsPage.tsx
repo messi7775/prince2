@@ -8,14 +8,13 @@ import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Pagination } from '../../../components/ui/pagination';
 import { useToast } from '../../../components/ui/use-toast';
-import { ConfirmDialog } from '../../../components/feedback/ConfirmDialog';
 import { useOwnerWithdrawals } from '../hooks/useOwnerWithdrawals';
 import { useCreateOwnerWithdrawal } from '../hooks/useCreateOwnerWithdrawal';
 import { useUpdateOwnerWithdrawal } from '../hooks/useUpdateOwnerWithdrawal';
-import { useDeleteOwnerWithdrawal } from '../hooks/useDeleteOwnerWithdrawal';
 import { OwnerWithdrawalsFilters } from '../components/OwnerWithdrawalsFilters';
 import { OwnerWithdrawalsTable } from '../components/OwnerWithdrawalsTable';
 import { OwnerWithdrawalFormDialog } from '../components/OwnerWithdrawalFormDialog';
+import { ReverseOwnerWithdrawalDialog } from '../components/ReverseOwnerWithdrawalDialog';
 import { printHTML, buildWithdrawalReceipt } from '../../../lib/print';
 import { formatMoney } from '../../../lib/currency';
 import { formatDate } from '../../../lib/format';
@@ -34,7 +33,7 @@ export function OwnerWithdrawalsPage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<OwnerWithdrawal | null>(null);
-  const [deleteTarget, setDeleteTarget] =
+  const [reverseTarget, setReverseTarget] =
     useState<OwnerWithdrawal | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useOwnerWithdrawals({
@@ -47,7 +46,6 @@ export function OwnerWithdrawalsPage() {
 
   const createMutation = useCreateOwnerWithdrawal();
   const updateMutation = useUpdateOwnerWithdrawal();
-  const deleteMutation = useDeleteOwnerWithdrawal();
   const isSubmitting =
     createMutation.isPending || updateMutation.isPending;
 
@@ -76,21 +74,6 @@ export function OwnerWithdrawalsPage() {
       toast({
         variant: 'destructive',
         title: 'فشل الحفظ',
-        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
-      });
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    try {
-      await deleteMutation.mutateAsync(deleteTarget.id);
-      toast({ title: 'تم الحذف' });
-      setDeleteTarget(null);
-    } catch (err) {
-      toast({
-        variant: 'destructive',
-        title: 'فشل الحذف',
         description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
       });
     }
@@ -155,7 +138,7 @@ export function OwnerWithdrawalsPage() {
           <OwnerWithdrawalsTable
             data={data.data}
             onEdit={handleEdit}
-            onDelete={setDeleteTarget}
+            onReverse={setReverseTarget}
             onPrint={handlePrint}
           />
           {totalPages > 1 && (
@@ -179,15 +162,10 @@ export function OwnerWithdrawalsPage() {
         initialData={editing}
       />
 
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
-        onConfirm={handleDelete}
-        title="حذف السحب"
-        description={`سيتم حذف سحب "${deleteTarget?.reason ?? ''}" نهائيًا. هل أنت متأكد؟`}
-        confirmLabel="حذف"
-        variant="destructive"
-        isLoading={deleteMutation.isPending}
+      <ReverseOwnerWithdrawalDialog
+        open={!!reverseTarget}
+        onOpenChange={(open) => !open && setReverseTarget(null)}
+        withdrawal={reverseTarget}
       />
     </div>
   );

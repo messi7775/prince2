@@ -215,6 +215,13 @@ export class ExpensesService {
           newValues.amount = input.amount;
         }
       }
+      if (
+        input.expenseDate !== undefined &&
+        input.expenseDate.getTime() !== existing.expenseDate.getTime()
+      ) {
+        oldValues.expenseDate = existing.expenseDate.toISOString();
+        newValues.expenseDate = input.expenseDate.toISOString();
+      }
 
       if (Object.keys(newValues).length === 0) {
         return this.toExpense(existing);
@@ -233,14 +240,24 @@ export class ExpensesService {
           ...(input.amount !== undefined
             ? { amount: new Prisma.Decimal(input.amount) }
             : {}),
+          ...(input.expenseDate !== undefined
+            ? { expenseDate: input.expenseDate }
+            : {}),
         },
       });
 
-      // مزامنة حركة الصندوق المرتبطة عند تغيير المبلغ
-      if (input.amount !== undefined) {
+      // مزامنة حركة الصندوق المرتبطة عند تغيير المبلغ أو التاريخ
+      if (input.amount !== undefined || input.expenseDate !== undefined) {
         await tx.cashMovement.updateMany({
           where: { sourceType: 'EXPENSE', sourceId: id },
-          data: { amount: new Prisma.Decimal(input.amount) },
+          data: {
+            ...(input.amount !== undefined
+              ? { amount: new Prisma.Decimal(input.amount) }
+              : {}),
+            ...(input.expenseDate !== undefined
+              ? { movementDate: input.expenseDate }
+              : {}),
+          },
         });
       }
 
@@ -257,19 +274,6 @@ export class ExpensesService {
 
       return this.toExpense(row);
     });
-  }
-
-  // ───────────────────────────────────────────────────────────
-  // Delete — عكس وليس حذف فعلي (schema rule #6)
-  // ───────────────────────────────────────────────────────────
-  async delete(
-    id: string,
-    userId: string,
-    req: { ip?: string; userAgent?: string },
-  ): Promise<{ success: boolean }> {
-    await this.reverse(id, { reason: 'حذف من الواجهة' }, userId, req);
-
-    return { success: true };
   }
 
   async reverse(

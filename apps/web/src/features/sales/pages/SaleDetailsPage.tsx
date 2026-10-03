@@ -24,7 +24,6 @@ import {
 } from '../../../components/ui/card';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
-import { ConfirmDialog } from '../../../components/feedback/ConfirmDialog';
 import { StatCard } from '../../dashboard/components/StatCard';
 import {
     Table,
@@ -41,10 +40,10 @@ import { CancelSaleDialog } from '../components/CancelSaleDialog';
 import { EditSaleDialog } from '../components/EditSaleDialog';
 import { usePayments } from '../../payments/hooks/usePayments';
 import { useUpdatePayment } from '../../payments/hooks/useUpdatePayment';
-import { useDeletePayment } from '../../payments/hooks/useDeletePayment';
 import { PaymentsTable } from '../../payments/components/PaymentsTable';
 import { CreatePaymentDialog } from '../../payments/components/CreatePaymentDialog';
 import { EditPaymentDialog } from '../../payments/components/EditPaymentDialog';
+import { ReversePaymentDialog } from '../../payments/components/ReversePaymentDialog';
 import { printHTML, buildSaleReceipt } from '../../../lib/print';
 import { formatMoney } from '../../../lib/currency';
 import { formatDateTime } from '../../../lib/format';
@@ -62,13 +61,12 @@ export function SaleDetailsPage() {
     const [createPaymentOpen, setCreatePaymentOpen] = useState(false);
     const [editPaymentTarget, setEditPaymentTarget] =
         useState<Payment | null>(null);
-    const [deletePaymentTarget, setDeletePaymentTarget] =
+    const [reversePaymentTarget, setReversePaymentTarget] =
         useState<Payment | null>(null);
 
     const saleQuery = useSale(id);
     const cancelMutation = useCancelSale();
     const updatePaymentMutation = useUpdatePayment();
-    const deletePaymentMutation = useDeletePayment();
 
     const paymentsQuery = usePayments({
         saleId: id,
@@ -128,23 +126,6 @@ const handleEditPayment = async (input: UpdatePaymentInput) => {
         toast({
             variant: 'destructive',
             title: 'فشل التحديث',
-            description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
-        });
-    }
-};
-
-const handleDeletePayment = async () => {
-    if (!deletePaymentTarget) return;
-    try {
-        await deletePaymentMutation.mutateAsync({
-            id: deletePaymentTarget.id,
-        });
-        toast({ title: 'تم حذف الدفعة' });
-        setDeletePaymentTarget(null);
-    } catch (err) {
-        toast({
-            variant: 'destructive',
-            title: 'فشل الحذف',
             description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
         });
     }
@@ -359,7 +340,7 @@ page = { paymentsPage }
 totalPages = { paymentsQuery.data?.meta.totalPages ?? 0 }
 onPageChange = { setPaymentsPage }
 onEdit = { setEditPaymentTarget }
-onDelete = { setDeletePaymentTarget }
+onReverse = { setReversePaymentTarget }
     />
           )}
 </CardContent>
@@ -411,15 +392,11 @@ onSubmit = { handleEditPayment }
 isSubmitting = { updatePaymentMutation.isPending }
     />
 
-    <ConfirmDialog
-        open={ !!deletePaymentTarget }
-onOpenChange = {(open) => !open && setDeletePaymentTarget(null)}
-onConfirm = { handleDeletePayment }
-title = "حذف الدفعة"
-description = "سيتم حذف الدفعة نهائيًا. هل أنت متأكد؟"
-confirmLabel = "حذف"
-variant = "destructive"
-isLoading = { deletePaymentMutation.isPending }
+    <ReversePaymentDialog
+        open={ !!reversePaymentTarget }
+onOpenChange = {(open) => !open && setReversePaymentTarget(null)}
+payment = { reversePaymentTarget }
+saleId = { sale.id }
     />
     </div>
   );
