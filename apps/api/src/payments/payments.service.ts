@@ -385,54 +385,24 @@ export class PaymentsService {
   }
 
   // ───────────────────────────────────────────────────────────
-  // Delete payment — Transaction
+  // Delete payment — عكس وليس حذف فعلي
   // ───────────────────────────────────────────────────────────
+  // قاعدة ثابتة (schema rule #6): لا حذف فعلي للسجلات المالية —
+  // يُستخدم status = REVERSED. لذلك DELETE يعادل عكسًا بسبب افتراضي،
+  // مع إنشاء حركة نقدية معاكسة (OUT) تحافظ على سلامة الصندوق.
   async delete(
     paymentId: string,
     userId: string,
     req: { ip?: string; userAgent?: string },
   ): Promise<{ success: boolean }> {
-    return this.prisma.$transaction(async (tx) => {
-      const existing = await tx.payment.findUnique({
-        where: { id: paymentId },
-      });
-      if (!existing) {
-        throw new NotFoundException({
-          message: 'الدفعة غير موجودة',
-          code: 'PAYMENT_NOT_FOUND',
-        });
-      }
+    await this.reverse(
+      paymentId,
+      { reason: 'حذف من الواجهة' },
+      userId,
+      req,
+    );
 
-      if (existing.status !== 'ACTIVE') {
-        throw new BusinessException(
-          'PAYMENT_NOT_ACTIVE',
-          'لا يمكن حذف دفعة معكوسة',
-          400,
-        );
-      }
-
-      // Delete associated cash movement
-      await tx.cashMovement.deleteMany({
-        where: { sourceType: 'SALE_PAYMENT', sourceId: paymentId },
-      });
-
-      await tx.payment.delete({ where: { id: paymentId } });
-
-      await this.auditService.logTx(tx, {
-        userId,
-        action: 'PAYMENT_DELETED',
-        entityType: 'Payment',
-        entityId: paymentId,
-        oldValues: {
-          saleId: existing.saleId,
-          amount: existing.amount.toString(),
-        },
-        ipAddress: req.ip ?? null,
-        userAgent: req.userAgent ?? null,
-      });
-
-      return { success: true };
-    });
+    return { success: true };
   }
 
   // ───────────────────────────────────────────────────────────

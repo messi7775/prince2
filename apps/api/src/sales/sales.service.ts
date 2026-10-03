@@ -188,13 +188,19 @@ export class SalesService {
               }
             }
 
-            // ─── 3. FIFO allocations لكل item ───
+            // ─── 3. Merge duplicate package items ───
+            // مطلوب قبل FIFO: allocateFifo يقرأ الرصيد من الـ ledger قبل
+            // كتابة أي SELL movement، فتكرار نفس الباقة في بندين منفصلين
+            // قد يوزّع كمية أكبر من المخزون المتاح.
+            const mergedItems = this.mergeItems(input.items);
+
+            // ─── 3b. FIFO allocations لكل item ───
             const allAllocations: Array<{
               packageId: string;
               allocations: Awaited<ReturnType<typeof allocateFifo>>;
             }> = [];
 
-            for (const item of input.items) {
+            for (const item of mergedItems) {
               const allocations = await allocateFifo(
                 tx,
                 item.packageId,
@@ -216,8 +222,8 @@ export class SalesService {
               totalPrice: Prisma.Decimal;
             }> = [];
 
-            for (let idx = 0; idx < input.items.length; idx++) {
-              const item = input.items[idx];
+            for (let idx = 0; idx < mergedItems.length; idx++) {
+              const item = mergedItems[idx];
               const pkg = packageMap.get(item.packageId)!;
               const allocs = allAllocations[idx].allocations;
 
@@ -337,7 +343,7 @@ export class SalesService {
                 invoiceNumber,
                 distributorId: input.distributorId,
                 totalAmount: totalAmount.toString(),
-                itemsCount: input.items.length,
+                itemsCount: mergedItems.length,
                 ...(paymentId ? { initialPaymentId: paymentId } : {}),
               },
               ipAddress: req.ip ?? null,
@@ -636,13 +642,16 @@ export class SalesService {
             },
           });
 
-          // ─── 7. FIFO allocate new items ───
+          // ─── 7. Merge duplicate package items + FIFO allocate new items ───
+          // (نفس قاعدة create: منع تكرار الباقة قبل FIFO)
+          const mergedItems = this.mergeItems(input.items);
+
           const allAllocations: Array<{
             packageId: string;
             allocations: Awaited<ReturnType<typeof allocateFifo>>;
           }> = [];
 
-          for (const item of input.items) {
+          for (const item of mergedItems) {
             const allocations = await allocateFifo(
               tx,
               item.packageId,
@@ -656,8 +665,8 @@ export class SalesService {
 
           // ─── 8. Calculate new totals from FIFO allocation prices (سعر الشدة) + create sale items ───
           let totalAmount = new Prisma.Decimal(0);
-          for (let idx = 0; idx < input.items.length; idx++) {
-            const item = input.items[idx];
+          for (let idx = 0; idx < mergedItems.length; idx++) {
+            const item = mergedItems[idx];
             const pkg = packageMap.get(item.packageId)!;
             const allocs = allAllocations[idx].allocations;
 
@@ -734,7 +743,7 @@ export class SalesService {
             },
             newValues: {
               totalAmount: totalAmount.toString(),
-              itemsCount: input.items.length,
+              itemsCount: mergedItems.length,
             },
             ipAddress: req.ip ?? null,
             userAgent: req.userAgent ?? null,
@@ -753,6 +762,29 @@ export class SalesService {
   // ───────────────────────────────────────────────────────────
   // Helpers
   // ───────────────────────────────────────────────────────────
+
+  /**
+   * mergeItems — يدمج البنود المكررة (نفس packageId) في بند واحد.
+   *
+   * ضروري قبل FIFO: allocateFifo يقرأ الرصيد من ledger قبل كتابة أي
+   * SELL movement، فتكرار نفس الباقة في بندين قد يوزّع أكثر من المتاح.
+   */
+  private mergeItems(
+    items: Array<{ packageId: string; quantity: number }>,
+  ): Array<{ packageId: string; quantity: number }> {
+    const merged = new Map<string, number>();
+    for (const item of items) {
+      merged.set(
+        item.packageId,
+        (merged.get(item.packageId) ?? 0) + item.quantity,
+      );
+    }
+    return Array.from(merged.entries()).map(([packageId, quantity]) => ({
+      packageId,
+      quantity,
+    }));
+  }
+
   private toSale(row: {
     id: string;
     invoiceNumber: string;
