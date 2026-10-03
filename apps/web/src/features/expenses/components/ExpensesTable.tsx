@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, Printer, RotateCcw, TrendingDown } from 'lucide-react';
+import { MoreHorizontal, Pencil, Printer, RotateCcw, Share2, TrendingDown } from 'lucide-react';
 import type { Expense, ExpenseCategory } from '@prince-net/types';
 import {
   Table,
@@ -26,6 +26,7 @@ interface ExpensesTableProps {
   onEdit: (expense: Expense) => void;
   onReverse: (expense: Expense) => void;
   onPrint: (expense: Expense) => void;
+  onSharePdf: (expense: Expense) => void;
 }
 
 export function ExpensesTable({
@@ -34,6 +35,7 @@ export function ExpensesTable({
   onEdit,
   onReverse,
   onPrint,
+  onSharePdf,
 }: ExpensesTableProps) {
   if (data.length === 0) {
     return (
@@ -95,6 +97,10 @@ export function ExpensesTable({
                       <DropdownMenuItem onClick={() => onPrint(expense)}>
                         <Printer className="me-2 h-4 w-4" />
                         طباعة
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onSharePdf(expense)}>
+                        <Share2 className="me-2 h-4 w-4" />
+                        مشاركة PDF
                       </DropdownMenuItem>
                       {isActive && (
                         <DropdownMenuItem onClick={() => onEdit(expense)}>

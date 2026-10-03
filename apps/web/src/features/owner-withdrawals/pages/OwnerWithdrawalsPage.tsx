@@ -16,6 +16,7 @@ import { OwnerWithdrawalsTable } from '../components/OwnerWithdrawalsTable';
 import { OwnerWithdrawalFormDialog } from '../components/OwnerWithdrawalFormDialog';
 import { ReverseOwnerWithdrawalDialog } from '../components/ReverseOwnerWithdrawalDialog';
 import { printHTML, buildWithdrawalReceipt } from '../../../lib/print';
+import { useSharePdf } from '../../../lib/use-share-pdf';
 import { formatMoney } from '../../../lib/currency';
 import { formatDate } from '../../../lib/format';
 import { ApiClientError } from '../../../lib/api-client';
@@ -25,6 +26,7 @@ type StatusFilter = 'ALL' | 'ACTIVE' | 'REVERSED';
 
 export function OwnerWithdrawalsPage() {
   const { toast } = useToast();
+  const { shareReceipt } = useSharePdf();
 
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<StatusFilter>('ALL');
@@ -92,6 +94,19 @@ export function OwnerWithdrawalsPage() {
     );
   };
 
+  const handleSharePdf = (w: OwnerWithdrawal) => {
+    void shareReceipt(
+      buildWithdrawalReceipt({
+        date: formatDate(w.withdrawalDate),
+        reason: w.reason,
+        amount: formatMoney(w.amount),
+        status: w.status,
+        notes: w.notes,
+      }),
+      `سند-سحب-${w.id}.pdf`,
+    );
+  };
+
   const totalPages = data?.meta.totalPages ?? 0;
 
   return (
@@ -140,6 +155,7 @@ export function OwnerWithdrawalsPage() {
             onEdit={handleEdit}
             onReverse={setReverseTarget}
             onPrint={handlePrint}
+            onSharePdf={handleSharePdf}
           />
           {totalPages > 1 && (
             <Pagination

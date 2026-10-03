@@ -18,6 +18,7 @@ import { ExpensesTable } from '../components/ExpensesTable';
 import { ExpenseFormDialog } from '../components/ExpenseFormDialog';
 import { ReverseExpenseDialog } from '../components/ReverseExpenseDialog';
 import { printHTML, buildExpenseReceipt } from '../../../lib/print';
+import { useSharePdf } from '../../../lib/use-share-pdf';
 import { formatMoney } from '../../../lib/currency';
 import { formatDate } from '../../../lib/format';
 import { ApiClientError } from '../../../lib/api-client';
@@ -27,6 +28,7 @@ type StatusFilter = 'ALL' | 'ACTIVE' | 'REVERSED';
 
 export function ExpensesPage() {
   const { toast } = useToast();
+  const { shareReceipt } = useSharePdf();
 
   const [page, setPage] = useState(1);
   const [categoryId, setCategoryId] = useState('');
@@ -101,6 +103,23 @@ export function ExpensesPage() {
     );
   };
 
+  const handleSharePdf = (expense: Expense) => {
+    const category = (categoriesQuery.data ?? []).find(
+      (c) => c.id === expense.categoryId,
+    );
+    void shareReceipt(
+      buildExpenseReceipt({
+        date: formatDate(expense.expenseDate),
+        category: category?.name ?? '—',
+        description: expense.description,
+        amount: formatMoney(expense.amount),
+        status: expense.status,
+        notes: expense.notes,
+      }),
+      `سند-مصروف-${expense.id}.pdf`,
+    );
+  };
+
   const totalPages = data?.meta.totalPages ?? 0;
 
   return (
@@ -161,6 +180,7 @@ export function ExpensesPage() {
             onEdit={handleEdit}
             onReverse={setReverseTarget}
             onPrint={handlePrint}
+            onSharePdf={handleSharePdf}
           />
           {totalPages > 1 && (
             <Pagination

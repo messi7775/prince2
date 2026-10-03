@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowRight, Pencil, Plus, Printer } from 'lucide-react';
+import { ArrowRight, Pencil, Plus, Printer, Share2 } from 'lucide-react';
 import type { CreateLineInput } from '@prince-net/validation';
 import type { LinePayment } from '@prince-net/types';
 import { PageHeader } from '../../../components/layout/PageHeader';
@@ -31,6 +31,7 @@ import { formatMoney } from '../../../lib/currency';
 import { formatDate } from '../../../lib/format';
 import { listLinePaymentsByLine } from '../../line-payments/api/listByLine';
 import { buildLinePaymentsReceipt, printHTML } from '../../../lib/print';
+import { useSharePdf } from '../../../lib/use-share-pdf';
 import { ApiClientError } from '../../../lib/api-client';
 
 const PAYMENTS_LIMIT = 25;
@@ -38,6 +39,8 @@ const PAYMENTS_LIMIT = 25;
 export function LineDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
+  const { shareReceipt } = useSharePdf();
+  const [isSharingPdf, setIsSharingPdf] = useState(false);
 
   const [editOpen, setEditOpen] = useState(false);
   const [toggleTarget, setToggleTarget] = useState<boolean | null>(null);
@@ -115,27 +118,32 @@ export function LineDetailsPage() {
     }
   };
 
+  const fetchAllPayments = async () => {
+    const firstPage = await listLinePaymentsByLine({
+      lineId: line.id,
+      page: 1,
+      limit: 100,
+      order: 'asc',
+    });
+
+    const payments = [...firstPage.data];
+    for (let page = 2; page <= firstPage.meta.totalPages; page += 1) {
+      const nextPage = await listLinePaymentsByLine({
+        lineId: line.id,
+        page,
+        limit: 100,
+        order: 'asc',
+      });
+      payments.push(...nextPage.data);
+    }
+    return payments;
+  };
+
   const handlePrintPayments = async () => {
     if (isPrinting) return;
     setIsPrinting(true);
     try {
-      const firstPage = await listLinePaymentsByLine({
-        lineId: line.id,
-        page: 1,
-        limit: 100,
-        order: 'asc',
-      });
-
-      const payments = [...firstPage.data];
-      for (let page = 2; page <= firstPage.meta.totalPages; page += 1) {
-        const nextPage = await listLinePaymentsByLine({
-          lineId: line.id,
-          page,
-          limit: 100,
-          order: 'asc',
-        });
-        payments.push(...nextPage.data);
-      }
+      const payments = await fetchAllPayments();
 
       printHTML(
         buildLinePaymentsReceipt({
@@ -154,6 +162,34 @@ export function LineDetailsPage() {
       });
     } finally {
       setIsPrinting(false);
+    }
+  };
+
+  const handleSharePaymentsPdf = async () => {
+    if (isSharingPdf) return;
+    setIsSharingPdf(true);
+    try {
+      const payments = await fetchAllPayments();
+      await shareReceipt(
+        buildLinePaymentsReceipt({
+          lineName: line.name,
+          identifier: line.identifier,
+          cost: formatMoney(line.cost),
+          payments,
+        }),
+        `دفعات-الخط-${line.name}.pdf`,
+      );
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'تعذّر إنشاء PDF',
+        description:
+          err instanceof ApiClientError
+            ? err.message
+            : 'تعذّر تحميل سجل الدفعات',
+      });
+    } finally {
+      setIsSharingPdf(false);
     }
   };
 
@@ -260,6 +296,16 @@ export function LineDetailsPage() {
             >
               <Printer className="me-2 h-4 w-4" />
               {isPrinting ? 'جارٍ التحضير...' : 'طباعة'}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handleSharePaymentsPdf}
+              disabled={isSharingPdf}
+            >
+              <Share2 className="me-2 h-4 w-4" />
+              {isSharingPdf ? 'جارٍ الإنشاء...' : 'مشاركة PDF'}
             </Button>
             <Button
               size="sm"

@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, Printer, RotateCcw, Wallet } from 'lucide-react';
+import { MoreHorizontal, Pencil, Printer, RotateCcw, Share2, Wallet } from 'lucide-react';
 import type { OwnerWithdrawal } from '@prince-net/types';
 import {
   Table,
@@ -25,6 +25,7 @@ interface OwnerWithdrawalsTableProps {
   onEdit: (withdrawal: OwnerWithdrawal) => void;
   onReverse: (withdrawal: OwnerWithdrawal) => void;
   onPrint: (withdrawal: OwnerWithdrawal) => void;
+  onSharePdf: (withdrawal: OwnerWithdrawal) => void;
 }
 
 export function OwnerWithdrawalsTable({
@@ -32,6 +33,7 @@ export function OwnerWithdrawalsTable({
   onEdit,
   onReverse,
   onPrint,
+  onSharePdf,
 }: OwnerWithdrawalsTableProps) {
   if (data.length === 0) {
     return (
@@ -90,6 +92,10 @@ export function OwnerWithdrawalsTable({
                       <DropdownMenuItem onClick={() => onPrint(w)}>
                         <Printer className="me-2 h-4 w-4" />
                         طباعة
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onSharePdf(w)}>
+                        <Share2 className="me-2 h-4 w-4" />
+                        مشاركة PDF
                       </DropdownMenuItem>
                       {isActive && (
                         <DropdownMenuItem onClick={() => onEdit(w)}>

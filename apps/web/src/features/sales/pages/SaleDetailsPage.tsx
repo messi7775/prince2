@@ -8,6 +8,7 @@ import {
     Pencil,
     Plus,
     Printer,
+    Share2,
     ShoppingCart,
     Users,
 } from 'lucide-react';
@@ -45,6 +46,7 @@ import { CreatePaymentDialog } from '../../payments/components/CreatePaymentDial
 import { EditPaymentDialog } from '../../payments/components/EditPaymentDialog';
 import { ReversePaymentDialog } from '../../payments/components/ReversePaymentDialog';
 import { printHTML, buildSaleReceipt } from '../../../lib/print';
+import { useSharePdf } from '../../../lib/use-share-pdf';
 import { formatMoney } from '../../../lib/currency';
 import { formatDateTime } from '../../../lib/format';
 import { ApiClientError } from '../../../lib/api-client';
@@ -54,6 +56,8 @@ const PAYMENTS_LIMIT = 25;
 export function SaleDetailsPage() {
     const { id } = useParams<{ id: string }>();
     const { toast } = useToast();
+    const { shareReceipt } = useSharePdf();
+    const [isSharingPdf, setIsSharingPdf] = useState(false);
 
     const [cancelOpen, setCancelOpen] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
@@ -153,6 +157,34 @@ const handlePrint = () => {
     );
 };
 
+const handleSharePdf = async () => {
+    if (isSharingPdf) return;
+    setIsSharingPdf(true);
+    try {
+        await shareReceipt(
+            buildSaleReceipt({
+                invoiceNumber: sale.invoiceNumber,
+                date: formatDateTime(sale.saleDate),
+                distributorName: sale.distributorName ?? '—',
+                status: sale.status,
+                items: sale.items.map((item) => ({
+                    packageNameSnapshot: item.packageNameSnapshot,
+                    quantity: item.quantity,
+                    unitPrice: item.unitPrice,
+                    totalPrice: item.totalPrice,
+                })),
+                totalAmount: sale.totalAmount,
+                paidAmount: sale.paidAmount,
+                remainingAmount: sale.remainingAmount,
+                notes: sale.notes,
+            }),
+            `فاتورة-${sale.invoiceNumber}.pdf`,
+        );
+    } finally {
+        setIsSharingPdf(false);
+    }
+};
+
 return (
     <div className= "space-y-3 sm:space-y-6" >
     <div>
@@ -171,6 +203,10 @@ actions = {
     <Button variant="outline" onClick = { handlePrint } size = "sm" className = "flex-1 sm:flex-none" >
         <Printer className="me-2 h-4 w-4" />
             طباعة
+            </Button>
+    <Button variant="outline" onClick={handleSharePdf} size="sm" className="flex-1 sm:flex-none" disabled={isSharingPdf}>
+        <Share2 className="me-2 h-4 w-4" />
+            {isSharingPdf ? 'جارٍ الإنشاء...' : 'مشاركة PDF'}
             </Button>
 {
     !isCancelled && (
