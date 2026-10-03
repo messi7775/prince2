@@ -1,0 +1,551 @@
+// ═══════════════════════════════════════════════════════════════
+// Prince Net Management System — Prisma Schema
+// ═══════════════════════════════════════════════════════════════
+//
+// Database: PostgreSQL
+// Money:    NUMERIC(12,2) → Prisma.Decimal
+// IDs:      UUID
+// Dates:    TIMESTAMPTZ(6) / DATE
+//
+// ───────────────────────────────────────────────────────────────
+// قواعد ثابتة:
+// ───────────────────────────────────────────────────────────────
+//
+// 1. لا يوجد paidAmount / remainingAmount كحقول مخزنة.
+//    SaleDetails.paidAmount = SUM(payments WHERE status = ACTIVE)
+//    SaleDetails.remainingAmount = totalAmount - paidAmount
+//
+// 2. لا يوجد currentStock مخزن.
+//    Current stock = SUM(inventory_movements.quantity_delta)
+//    لـ packageStockId محدد.
+//
+// 3. لا يوجد cashBalance مخزن.
+//    Cash balance = SUM(IN) - SUM(OUT) من cash_movements.
+//
+// 4. لا يوجد distributor.balance مخزن.
+//    Balance = SUM(ACTIVE sales) - SUM(ACTIVE payments)
+//
+// 5. FIFO عند البيع:
+//    - SaleItem لا يحمل packageStockId.
+//    - عند بيع Package، Backend يوزع الكمية على PackageStock
+//      حسب receivedAt ASC, ثم createdAt ASC, ثم id ASC.
+//    - ينشئ InventoryMovement من نوع SELL لكل دفعة مستخدمة.
+//    - يُنفّذ داخل Transaction واحدة.
+//
+// 6. الحذف:
+//    - السجلات المالية: onDelete: Restrict
+//    - لا حذف فعلي للسجلات المالية — يُستخدم status = REVERSED.
+//
+// 7. Polymorphic References:
+//    - inventory_movements.reference_id → بدون FK
+//    - cash_movements.source_id → بدون FK
+//
+// 8. Prisma Generator:
+//    - prisma-client-js + engineType = "client" (Rust-free)
+//    - تجريبي على Termux — الإنتاج على Linux/Serv00.
+//
+// 9. Settings.singletonKey:
+//    - تفصيل DB داخلي لضمان Singleton.
+//    - لا يظهر في DTOs/API.
+//
+// 10. Backup.sizeBytes:
+//     - Prisma BigInt.
+//     - التحويل BigInt → number في طبقة DTO.
+//
+// 11. Settings.adminEmail:
+//     - البريد الإداري الظاهر في الفواتير/المخرجات.
+//     - منفصل عن users.email (بريد تسجيل الدخول).
+//
+// ═══════════════════════════════════════════════════════════════
+
+generator client {
+  provider   = "prisma-client-js"
+  output     = "../src/generated/prisma"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ENUMS
+// ═══════════════════════════════════════════════════════════════
+
+enum EntityStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum SaleStatus {
+  ACTIVE
+  CANCELLED
+}
+
+enum PaymentStatus {
+  ACTIVE
+  REVERSED
+}
+
+enum LinePaymentStatus {
+  ACTIVE
+  REVERSED
+}
+
+enum ExpenseStatus {
+  ACTIVE
+  REVERSED
+}
+
+enum OwnerWithdrawalStatus {
+  ACTIVE
+  REVERSED
+}
+
+enum InventoryMovementType {
+  ADD
+  SELL
+  RETURN
+  ADJUSTMENT
+}
+
+enum CashDirection {
+  IN
+  OUT
+}
+
+enum CashSourceType {
+  OPENING
+  SALE_PAYMENT
+  SALE_PAYMENT_REVERSAL
+  EXPENSE
+  EXPENSE_REVERSAL
+  LINE_PAYMENT
+  LINE_PAYMENT_REVERSAL
+  OWNER_WITHDRAWAL
+  OWNER_WITHDRAWAL_REVERSAL
+  MANUAL
+}
+
+enum AuditAction {
+  LOGIN
+  LOGIN_FAILED
+  PACKAGE_CREATED
+  PACKAGE_UPDATED
+  INVENTORY_ADDED
+  INVENTORY_ADJUSTED
+  INVENTORY_RETURNED
+  INVENTORY_BATCH_UPDATED
+  INVENTORY_BATCH_DELETED
+  DISTRIBUTOR_CREATED
+  DISTRIBUTOR_UPDATED
+  DISTRIBUTOR_ACTIVATED
+  DISTRIBUTOR_DEACTIVATED
+  SALE_CREATED
+  SALE_CANCELLED
+  SALE_UPDATED
+  PAYMENT_CREATED
+  PAYMENT_UPDATED
+  PAYMENT_DELETED
+  PAYMENT_REVERSED
+  LINE_CREATED
+  LINE_UPDATED
+  LINE_ACTIVATED
+  LINE_DEACTIVATED
+  LINE_PAYMENT_CREATED
+  LINE_PAYMENT_UPDATED
+  LINE_PAYMENT_DELETED
+  LINE_PAYMENT_REVERSED
+  LINE_DELETED
+  EXPENSE_CREATED
+  EXPENSE_UPDATED
+  EXPENSE_REVERSED
+  EXPENSE_DELETED
+  EXPENSE_CATEGORY_CREATED
+  EXPENSE_CATEGORY_UPDATED
+  EXPENSE_CATEGORY_ACTIVATED
+  EXPENSE_CATEGORY_DEACTIVATED
+  EXPENSE_CATEGORY_DELETED
+  OWNER_WITHDRAWAL_CREATED
+  OWNER_WITHDRAWAL_UPDATED
+  OWNER_WITHDRAWAL_DELETED
+  OWNER_WITHDRAWAL_REVERSED
+  CASH_MANUAL_IN
+  CASH_MANUAL_OUT
+  BACKUP_CREATED
+  BACKUP_RESTORED
+  SETTINGS_UPDATED
+  PASSWORD_CHANGED
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MODELS
+// ═══════════════════════════════════════════════════════════════
+
+// ─── 1. users ─────────────────────────────────────────────────
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  tokenVersion Int      @default(0) @map("token_version")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  packageStocks            PackageStock[]
+  inventoryMovements       InventoryMovement[]
+  salesCreated             Sale[]              @relation("SaleCreatedBy")
+  salesCancelled           Sale[]              @relation("SaleCancelledBy")
+  paymentsCreated          Payment[]           @relation("PaymentCreatedBy")
+  paymentsReversed         Payment[]           @relation("PaymentReversedBy")
+  linePaymentsCreated      LinePayment[]       @relation("LinePaymentCreatedBy")
+  linePaymentsReversed     LinePayment[]       @relation("LinePaymentReversedBy")
+  expensesCreated          Expense[]           @relation("ExpenseCreatedBy")
+  expensesReversed         Expense[]           @relation("ExpenseReversedBy")
+  ownerWithdrawalsCreated  OwnerWithdrawal[]   @relation("OwnerWithdrawalCreatedBy")
+  ownerWithdrawalsReversed OwnerWithdrawal[]   @relation("OwnerWithdrawalReversedBy")
+  cashMovements            CashMovement[]
+  auditLogs                AuditLog[]
+  backups                  Backup[]
+
+  @@map("users")
+}
+
+// ─── 2. packages ──────────────────────────────────────────────
+model Package {
+  id          String       @id @default(uuid()) @db.Uuid
+  name        String       @unique
+  price       Decimal      @db.Decimal(12, 2)
+  dataSizeMb  Int          @map("data_size_mb")
+  hours       Int
+  color       String?
+  status      EntityStatus @default(ACTIVE)
+  description String?
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  stocks    PackageStock[]
+  saleItems SaleItem[]
+
+  @@index([status])
+  @@map("packages")
+}
+
+// ─── 3. package_stocks ────────────────────────────────────────
+model PackageStock {
+  id         String   @id @default(uuid()) @db.Uuid
+  packageId  String   @map("package_id") @db.Uuid
+  unitPrice  Decimal  @map("unit_price") @db.Decimal(12, 2)
+  receivedAt DateTime @map("received_at") @db.Timestamptz(6)
+  notes      String?
+  createdBy  String   @map("created_by") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  package            Package             @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  createdByUser      User                @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+  inventoryMovements InventoryMovement[]
+
+  @@index([packageId])
+  @@index([receivedAt])
+  @@index([createdAt])
+  @@map("package_stocks")
+}
+
+// ─── 4. inventory_movements ───────────────────────────────────
+model InventoryMovement {
+  id             String                @id @default(uuid()) @db.Uuid
+  packageStockId String                @map("package_stock_id") @db.Uuid
+  type           InventoryMovementType
+  quantityDelta  Int                   @map("quantity_delta")
+  unitPrice      Decimal               @map("unit_price") @db.Decimal(12, 2)
+  referenceType  String?               @map("reference_type")
+  referenceId    String?               @map("reference_id") @db.Uuid
+  description    String?
+  createdBy      String                @map("created_by") @db.Uuid
+  createdAt      DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  packageStock  PackageStock @relation(fields: [packageStockId], references: [id], onDelete: Restrict)
+  createdByUser User         @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+
+  @@index([packageStockId])
+  @@index([type])
+  @@index([referenceType, referenceId])
+  @@index([createdAt])
+  @@map("inventory_movements")
+}
+
+// ─── 5. distributors ──────────────────────────────────────────
+model Distributor {
+  id               String       @id @default(uuid()) @db.Uuid
+  name             String
+  phone            String
+  address          String?
+  notes            String?
+  status           EntityStatus @default(ACTIVE)
+  registrationDate DateTime     @default(now()) @map("registration_date") @db.Timestamptz(6)
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  sales Sale[]
+
+  @@index([name])
+  @@index([phone])
+  @@index([status])
+  @@map("distributors")
+}
+
+// ─── 6. sales ─────────────────────────────────────────────────
+model Sale {
+  id                 String     @id @default(uuid()) @db.Uuid
+  invoiceNumber      String     @unique @map("invoice_number")
+  distributorId      String     @map("distributor_id") @db.Uuid
+  totalAmount        Decimal    @map("total_amount") @db.Decimal(12, 2)
+  status             SaleStatus @default(ACTIVE)
+  saleDate           DateTime   @default(now()) @map("sale_date") @db.Timestamptz(6)
+  notes              String?
+  createdBy          String     @map("created_by") @db.Uuid
+  createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  cancelledAt        DateTime?  @map("cancelled_at") @db.Timestamptz(6)
+  cancelledBy        String?    @map("cancelled_by") @db.Uuid
+  cancellationReason String?    @map("cancellation_reason")
+
+  distributor     Distributor @relation(fields: [distributorId], references: [id], onDelete: Restrict)
+  createdByUser   User        @relation("SaleCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
+  cancelledByUser User?       @relation("SaleCancelledBy", fields: [cancelledBy], references: [id], onDelete: Restrict)
+  items           SaleItem[]
+  payments        Payment[]
+
+  @@index([distributorId])
+  @@index([saleDate])
+  @@index([status])
+  @@map("sales")
+}
+
+// ─── 7. sale_items ────────────────────────────────────────────
+model SaleItem {
+  id                  String   @id @default(uuid()) @db.Uuid
+  saleId              String   @map("sale_id") @db.Uuid
+  packageId           String   @map("package_id") @db.Uuid
+  packageNameSnapshot String   @map("package_name_snapshot")
+  quantity            Int
+  unitPrice           Decimal  @map("unit_price") @db.Decimal(12, 2)
+  totalPrice          Decimal  @map("total_price") @db.Decimal(12, 2)
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  sale    Sale    @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  package Package @relation(fields: [packageId], references: [id], onDelete: Restrict)
+
+  @@index([saleId])
+  @@index([packageId])
+  @@map("sale_items")
+}
+
+// ─── 8. payments ──────────────────────────────────────────────
+model Payment {
+  id             String        @id @default(uuid()) @db.Uuid
+  saleId         String        @map("sale_id") @db.Uuid
+  amount         Decimal       @db.Decimal(12, 2)
+  status         PaymentStatus @default(ACTIVE)
+  paymentDate    DateTime      @default(now()) @map("payment_date") @db.Timestamptz(6)
+  notes          String?
+  createdBy      String        @map("created_by") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  reversedAt     DateTime?     @map("reversed_at") @db.Timestamptz(6)
+  reversedBy     String?       @map("reversed_by") @db.Uuid
+  reversalReason String?       @map("reversal_reason")
+
+  sale           Sale  @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  createdByUser  User  @relation("PaymentCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
+  reversedByUser User? @relation("PaymentReversedBy", fields: [reversedBy], references: [id], onDelete: Restrict)
+
+  @@index([saleId])
+  @@index([paymentDate])
+  @@index([status])
+  @@map("payments")
+}
+
+// ─── 9. lines ─────────────────────────────────────────────────
+model Line {
+  id               String       @id @default(uuid()) @db.Uuid
+  name             String
+  provider         String
+  identifier       String
+  speed            String?
+  cost             Decimal      @db.Decimal(12, 2)
+  status           EntityStatus @default(ACTIVE)
+  subscriptionDate DateTime     @map("subscription_date") @db.Timestamptz(6)
+  notes            String?
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  payments LinePayment[]
+
+  @@index([status])
+  @@index([identifier])
+  @@map("lines")
+}
+
+// ─── 10. line_payments ────────────────────────────────────────
+model LinePayment {
+  id             String            @id @default(uuid()) @db.Uuid
+  lineId         String            @map("line_id") @db.Uuid
+  amount         Decimal           @db.Decimal(12, 2)
+  period         String
+  status         LinePaymentStatus @default(ACTIVE)
+  paymentDate    DateTime          @default(now()) @map("payment_date") @db.Timestamptz(6)
+  notes          String?
+  createdBy      String            @map("created_by") @db.Uuid
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  reversedAt     DateTime?         @map("reversed_at") @db.Timestamptz(6)
+  reversedBy     String?           @map("reversed_by") @db.Uuid
+  reversalReason String?           @map("reversal_reason")
+
+  line           Line  @relation(fields: [lineId], references: [id], onDelete: Restrict)
+  createdByUser  User  @relation("LinePaymentCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
+  reversedByUser User? @relation("LinePaymentReversedBy", fields: [reversedBy], references: [id], onDelete: Restrict)
+
+  @@index([lineId])
+  @@index([paymentDate])
+  @@index([status])
+  @@map("line_payments")
+}
+
+// ─── 11. expense_categories ───────────────────────────────────
+model ExpenseCategory {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  expenses Expense[]
+
+  @@map("expense_categories")
+}
+
+// ─── 12. expenses ─────────────────────────────────────────────
+model Expense {
+  id             String        @id @default(uuid()) @db.Uuid
+  categoryId     String        @map("category_id") @db.Uuid
+  description    String
+  amount         Decimal       @db.Decimal(12, 2)
+  status         ExpenseStatus @default(ACTIVE)
+  expenseDate    DateTime      @default(now()) @map("expense_date") @db.Timestamptz(6)
+  notes          String?
+  createdBy      String        @map("created_by") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  reversedAt     DateTime?     @map("reversed_at") @db.Timestamptz(6)
+  reversedBy     String?       @map("reversed_by") @db.Uuid
+  reversalReason String?       @map("reversal_reason")
+
+  category       ExpenseCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  createdByUser  User            @relation("ExpenseCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
+  reversedByUser User?           @relation("ExpenseReversedBy", fields: [reversedBy], references: [id], onDelete: Restrict)
+
+  @@index([categoryId])
+  @@index([expenseDate])
+  @@index([status])
+  @@map("expenses")
+}
+
+// ─── 13. owner_withdrawals ────────────────────────────────────
+model OwnerWithdrawal {
+  id             String                @id @default(uuid()) @db.Uuid
+  amount         Decimal               @db.Decimal(12, 2)
+  reason         String
+  status         OwnerWithdrawalStatus @default(ACTIVE)
+  withdrawalDate DateTime              @default(now()) @map("withdrawal_date") @db.Timestamptz(6)
+  notes          String?
+  createdBy      String                @map("created_by") @db.Uuid
+  createdAt      DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  reversedAt     DateTime?             @map("reversed_at") @db.Timestamptz(6)
+  reversedBy     String?               @map("reversed_by") @db.Uuid
+  reversalReason String?               @map("reversal_reason")
+
+  createdByUser  User  @relation("OwnerWithdrawalCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
+  reversedByUser User? @relation("OwnerWithdrawalReversedBy", fields: [reversedBy], references: [id], onDelete: Restrict)
+
+  @@index([withdrawalDate])
+  @@index([status])
+  @@map("owner_withdrawals")
+}
+
+// ─── 14. cash_movements ───────────────────────────────────────
+model CashMovement {
+  id           String         @id @default(uuid()) @db.Uuid
+  direction    CashDirection
+  amount       Decimal        @db.Decimal(12, 2)
+  sourceType   CashSourceType @map("source_type")
+  sourceId     String?        @map("source_id") @db.Uuid
+  description  String?
+  movementDate DateTime       @default(now()) @map("movement_date") @db.Timestamptz(6)
+  createdBy    String         @map("created_by") @db.Uuid
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  createdByUser User @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+
+  @@index([sourceType])
+  @@index([sourceType, sourceId])
+  @@index([movementDate])
+  @@index([direction])
+  @@map("cash_movements")
+}
+
+// ─── 15. audit_logs ───────────────────────────────────────────
+model AuditLog {
+  id         String      @id @default(uuid()) @db.Uuid
+  userId     String      @map("user_id") @db.Uuid
+  action     AuditAction
+  entityType String      @map("entity_type")
+  entityId   String?     @map("entity_id") @db.Uuid
+  oldValues  Json?       @map("old_values") @db.JsonB
+  newValues  Json?       @map("new_values") @db.JsonB
+  ipAddress  String?     @map("ip_address")
+  userAgent  String?     @map("user_agent")
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([action])
+  @@map("audit_logs")
+}
+
+// ─── 16. backups ──────────────────────────────────────────────
+model Backup {
+  id          String   @id @default(uuid()) @db.Uuid
+  fileName    String   @map("file_name")
+  storagePath String   @map("storage_path")
+  sizeBytes   BigInt   @map("size_bytes")
+  recordCount Int      @map("record_count")
+  checksum    String
+  createdBy   String   @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  createdByUser User @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+
+  @@index([createdAt])
+  @@map("backups")
+}
+
+// ─── 17. settings ─────────────────────────────────────────────
+model Settings {
+  id                String   @id @default(uuid()) @db.Uuid
+  singletonKey      String   @unique @default("main") @map("singleton_key")
+  networkName       String   @map("network_name")
+  currencyName      String   @map("currency_name")
+  currencySymbol    String   @map("currency_symbol")
+  // admin_email: البريد الإداري الظاهر في الفواتير/المخرجات.
+  // ليس بريد تسجيل الدخول (users.email).
+  adminEmail        String   @map("admin_email")
+  lowStockThreshold Int      @default(10) @map("low_stock_threshold")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("settings")
+}

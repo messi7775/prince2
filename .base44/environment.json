@@ -1,0 +1,25 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "JWT_SECRET",
+      "description": "JWT signing secret for auth tokens (min 32 chars). Internal app secret, not an external credential.",
+      "requiredAtBoot": true,
+      "generatedForDevelopment": true
+    },
+    {
+      "name": "CSRF_SECRET",
+      "description": "CSRF double-submit cookie signing secret (min 16 chars). Internal app secret, not an external credential.",
+      "requiredAtBoot": true,
+      "generatedForDevelopment": true
+    },
+    {
+      "name": "ADMIN_PASSWORD",
+      "description": "Admin login password for ibrabra651@gmail.com (min 12 chars). Internal, not an external credential.",
+      "requiredAtBoot": true,
+      "generatedForDevelopment": false
+    }
+  ]
+}
