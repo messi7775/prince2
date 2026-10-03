@@ -12,6 +12,8 @@ export type AuditAction =
     | "EXPENSE_CATEGORY_CREATED" | "EXPENSE_CATEGORY_UPDATED"
     | "EXPENSE_CATEGORY_ACTIVATED" | "EXPENSE_CATEGORY_DEACTIVATED" | "EXPENSE_CATEGORY_DELETED"
     | "OWNER_WITHDRAWAL_CREATED" | "OWNER_WITHDRAWAL_UPDATED" | "OWNER_WITHDRAWAL_DELETED" | "OWNER_WITHDRAWAL_REVERSED"
-    | "CASH_MANUAL_IN" | "CASH_MANUAL_OUT" | "BACKUP_CREATED" | "BACKUP_RESTORED"
+    | "CASH_MANUAL_IN" | "CASH_MANUAL_OUT"
+    | "BACKUP_CREATED" | "BACKUP_RESTORED" | "BACKUP_EXPORTED"
+    | "BACKUP_DELETED" | "BACKUPS_PURGED"
     | "SETTINGS_UPDATED" | "PASSWORD_CHANGED";
 export interface AuditLog { id: UUID; userId: UUID; userEmail: string | null; action: AuditAction; entityType: string; entityId: UUID | null; oldValues: Record<string, unknown> | null; newValues: Record<string, unknown> | null; ipAddress: string | null; userAgent: string | null; createdAt: ISODateString; }

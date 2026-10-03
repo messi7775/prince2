@@ -50,6 +50,9 @@ export const AUDIT_ACTIONS: AuditActionOption[] = [
   { value: 'CASH_MANUAL_OUT', label: 'سحب يدوي' },
   { value: 'BACKUP_CREATED', label: 'إنشاء نسخة احتياطية' },
   { value: 'BACKUP_RESTORED', label: 'استعادة نسخة' },
+  { value: 'BACKUP_EXPORTED', label: 'تصدير نسخة إلى الجهاز' },
+  { value: 'BACKUP_DELETED', label: 'حذف نسخة احتياطية' },
+  { value: 'BACKUPS_PURGED', label: 'حذف جميع النسخ الاحتياطية' },
   { value: 'SETTINGS_UPDATED', label: 'تعديل الإعدادات' },
   { value: 'PASSWORD_CHANGED', label: 'تغيير كلمة المرور' },
 ];
