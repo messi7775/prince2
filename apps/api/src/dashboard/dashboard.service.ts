@@ -106,6 +106,52 @@ export class DashboardService {
       cashOutAgg._sum.amount ?? new Prisma.Decimal(0),
     );
 
+    // ─── Current financial summary (excludes REVERSED) ───
+    const [
+      totalPaymentsAgg,
+      totalExpensesAgg,
+      totalOwnerWithdrawalsAgg,
+    ] = await Promise.all([
+      this.prisma.payment.aggregate({
+        where: { status: 'ACTIVE', sale: { status: 'ACTIVE' } },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      this.prisma.expense.aggregate({
+        where: { status: 'ACTIVE' },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      this.prisma.ownerWithdrawal.aggregate({
+        where: { status: 'ACTIVE' },
+        _sum: { amount: true },
+        _count: true,
+      }),
+    ]);
+
+    const financialSummary = {
+      totalPayments: toMoneyStringRequired(
+        totalPaymentsAgg._sum.amount ?? new Prisma.Decimal(0),
+      ),
+      totalExpenses: toMoneyStringRequired(
+        totalExpensesAgg._sum.amount ?? new Prisma.Decimal(0),
+      ),
+      totalOwnerWithdrawals: toMoneyStringRequired(
+        totalOwnerWithdrawalsAgg._sum.amount ?? new Prisma.Decimal(0),
+      ),
+      cashIn: toMoneyStringRequired(
+        cashInAgg._sum.amount ?? new Prisma.Decimal(0),
+      ),
+      cashOut: toMoneyStringRequired(
+        cashOutAgg._sum.amount ?? new Prisma.Decimal(0),
+      ),
+      cashBalance: toMoneyStringRequired(cashBalance),
+      transactionsCount:
+        totalPaymentsAgg._count +
+        totalExpensesAgg._count +
+        totalOwnerWithdrawalsAgg._count,
+    };
+
     // ─── Total distributor debt ───
     const [allSalesAgg, allPaymentsAgg] = await Promise.all([
       this.prisma.sale.aggregate({
@@ -154,6 +200,7 @@ export class DashboardService {
       topPackages,
       distributorDebts,
       recentTransactions,
+      financialSummary,
     };
   }
 

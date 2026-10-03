@@ -10,6 +10,7 @@ import { PageHeader } from '../../../components/layout/PageHeader';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { StatCard } from '../components/StatCard';
+import { FinancialSummary } from '../components/FinancialSummary';
 import { TopPackages } from '../components/TopPackages';
 import { DistributorDebts } from '../components/DistributorDebts';
 import { LowStockAlerts } from '../components/LowStockAlerts';
@@ -79,6 +80,9 @@ export function DashboardPage() {
           variant="warning"
         />
       </div>
+
+      {/* Financial summary */}
+      <FinancialSummary data={data.financialSummary} />
 
       {/* Lists */}
       <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
