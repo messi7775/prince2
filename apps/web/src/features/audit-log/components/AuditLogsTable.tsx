@@ -43,7 +43,7 @@ export function AuditLogsTable({ data, page, totalPages, onPageChange, onViewDet
                   <Badge variant={getAuditActionTone(log.action)}>{getAuditActionLabel(log.action)}</Badge>
                 </TableCell>
                 <TableCell className="text-sm font-medium">{getEntityTypeLabel(log.entityType)}</TableCell>
-                <TableCell className="hidden max-w-[220px] truncate text-sm sm:table-cell">{log.userEmail ?? '—'}</TableCell>
+                <TableCell className="hidden max-w-[220px] truncate text-sm sm:table-cell ltr">{log.userEmail ?? '—'}</TableCell>
                 <TableCell className="hidden text-xs num lg:table-cell">{log.ipAddress ?? '—'}</TableCell>
                 <TableCell>
                   <Button type="button" variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); onViewDetails(log); }} aria-label="عرض التفاصيل">

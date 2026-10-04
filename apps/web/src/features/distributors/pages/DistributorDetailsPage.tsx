@@ -1,3 +1,5 @@
+import { InvoiceStatusBadge } from '../../sales/components/InvoiceStatusBadge';
+import { ActivityTimeline } from '../../../components/activity/ActivityTimeline';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
@@ -7,8 +9,8 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
+  RotateCcw,
   ShoppingCart,
-  Trash2,
 } from 'lucide-react';
 import type { CreateDistributorInput, UpdatePaymentInput } from '@prince-net/validation';
 import type { Payment } from '@prince-net/types';
@@ -47,9 +49,10 @@ import {
 } from '../hooks/useDistributorStatus';
 import { DistributorFormDialog } from '../components/DistributorFormDialog';
 import { RegisterPaymentDialog } from '../components/RegisterPaymentDialog';
+import { DistributorStatementTab } from '../components/DistributorStatementTab';
 import { EditPaymentDialog } from '../../payments/components/EditPaymentDialog';
+import { ReversePaymentDialog } from '../../payments/components/ReversePaymentDialog';
 import { useUpdatePayment } from '../../payments/hooks/useUpdatePayment';
-import { useDeletePayment } from '../../payments/hooks/useDeletePayment';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,7 +74,7 @@ export function DistributorDetailsPage() {
   const [registerPaymentOpen, setRegisterPaymentOpen] = useState(false);
   const [editPaymentTarget, setEditPaymentTarget] =
     useState<Payment | null>(null);
-  const [deletePaymentTarget, setDeletePaymentTarget] =
+  const [reversePaymentTarget, setReversePaymentTarget] =
     useState<Payment | null>(null);
   const [salesPage, setSalesPage] = useState(1);
   const [paymentsPage, setPaymentsPage] = useState(1);
@@ -94,7 +97,7 @@ export function DistributorDetailsPage() {
   const activateMutation = useActivateDistributor();
   const deactivateMutation = useDeactivateDistributor();
   const updatePaymentMutation = useUpdatePayment();
-  const deletePaymentMutation = useDeletePayment();
+
 
   if (distributorQuery.isLoading) {
     return <LoadingState message="جارٍ تحميل الموزع..." />;
@@ -165,23 +168,6 @@ export function DistributorDetailsPage() {
       toast({
         variant: 'destructive',
         title: 'فشل التحديث',
-        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
-      });
-    }
-  };
-
-  const handleDeletePayment = async () => {
-    if (!deletePaymentTarget) return;
-    try {
-      await deletePaymentMutation.mutateAsync({
-        id: deletePaymentTarget.id,
-      });
-      toast({ title: 'تم حذف الدفعة' });
-      setDeletePaymentTarget(null);
-    } catch (err) {
-      toast({
-        variant: 'destructive',
-        title: 'فشل الحذف',
         description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
       });
     }
@@ -265,6 +251,7 @@ export function DistributorDetailsPage() {
         <TabsList>
           <TabsTrigger value="sales">المبيعات</TabsTrigger>
           <TabsTrigger value="payments">التحصيلات</TabsTrigger>
+          <TabsTrigger value="statement">كشف الحساب</TabsTrigger>
         </TabsList>
 
         {balanceQuery.data && balanceQuery.data.balance !== '0.00' && balanceQuery.data.balance !== '0' && (
@@ -333,13 +320,7 @@ export function DistributorDetailsPage() {
                             : '—'}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={
-                              s.status === 'ACTIVE' ? 'success' : 'destructive'
-                            }
-                          >
-                            {s.status === 'ACTIVE' ? 'نشطة' : 'ملغاة'}
-                          </Badge>
+                          <InvoiceStatusBadge sale={s} />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -417,10 +398,10 @@ export function DistributorDetailsPage() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-destructive"
-                                  onClick={() => setDeletePaymentTarget(p)}
+                                  onClick={() => setReversePaymentTarget(p)}
                                 >
-                                  <Trash2 className="me-2 h-4 w-4" />
-                                  حذف
+                                  <RotateCcw className="me-2 h-4 w-4" />
+                                  عكس
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -441,7 +422,16 @@ export function DistributorDetailsPage() {
             </>
           )}
         </TabsContent>
+
+        <TabsContent value="statement" className="space-y-4">
+          <DistributorStatementTab
+            distributorId={d.id}
+            distributorName={d.name}
+          />
+        </TabsContent>
       </Tabs>
+
+      <ActivityTimeline entityType="Distributor" entityId={d.id} />
 
       <DistributorFormDialog
         open={editOpen}
@@ -480,15 +470,11 @@ export function DistributorDetailsPage() {
         isSubmitting={updatePaymentMutation.isPending}
       />
 
-      <ConfirmDialog
-        open={!!deletePaymentTarget}
-        onOpenChange={(open) => !open && setDeletePaymentTarget(null)}
-        onConfirm={handleDeletePayment}
-        title="حذف الدفعة"
-        description="سيتم حذف الدفعة نهائيًا. هل أنت متأكد؟"
-        confirmLabel="حذف"
-        variant="destructive"
-        isLoading={deletePaymentMutation.isPending}
+      <ReversePaymentDialog
+        open={!!reversePaymentTarget}
+        onOpenChange={(open) => !open && setReversePaymentTarget(null)}
+        payment={reversePaymentTarget}
+        saleId={reversePaymentTarget?.saleId ?? ''}
       />
     </div>
   );

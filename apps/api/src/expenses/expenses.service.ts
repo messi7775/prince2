@@ -156,70 +156,6 @@ export class ExpensesService {
     userId: string,
     req: { ip?: string; userAgent?: string },
   ): Promise<Expense> {
-    const existing = await this.prisma.expense.findUnique({ where: { id } });
-    if (!existing) {
-      throw new NotFoundException({
-        message: 'المصروف غير موجود',
-        code: 'EXPENSE_NOT_FOUND',
-      });
-    }
-
-    if (existing.status !== 'ACTIVE') {
-      throw new BusinessException(
-        'EXPENSE_NOT_ACTIVE',
-        'لا يمكن تعديل مصروف معكوس',
-        400,
-      );
-    }
-
-    const oldValues: Record<string, unknown> = {};
-    const newValues: Record<string, unknown> = {};
-
-    if (
-      input.description !== undefined &&
-      input.description !== existing.description
-    ) {
-      oldValues.description = existing.description;
-      newValues.description = input.description;
-    }
-    if (input.notes !== undefined && input.notes !== existing.notes) {
-      oldValues.notes = existing.notes;
-      newValues.notes = input.notes;
-    }
-
-    if (Object.keys(newValues).length === 0) {
-      return this.toExpense(existing);
-    }
-
-    const row = await this.prisma.expense.update({
-      where: { id },
-      data: {
-        ...(input.description !== undefined
-          ? { description: input.description }
-          : {}),
-        ...(input.notes !== undefined ? { notes: input.notes } : {}),
-      },
-    });
-
-    await this.auditService.log({
-      userId,
-      action: 'EXPENSE_UPDATED',
-      entityType: 'Expense',
-      entityId: id,
-      oldValues,
-      newValues,
-      ipAddress: req.ip ?? null,
-      userAgent: req.userAgent ?? null,
-    });
-
-    return this.toExpense(row);
-  }
-
-  async delete(
-    id: string,
-    userId: string,
-    req: { ip?: string; userAgent?: string },
-  ): Promise<{ success: boolean }> {
     return this.prisma.$transaction(async (tx) => {
       const existing = await tx.expense.findUnique({ where: { id } });
       if (!existing) {
@@ -232,31 +168,111 @@ export class ExpensesService {
       if (existing.status !== 'ACTIVE') {
         throw new BusinessException(
           'EXPENSE_NOT_ACTIVE',
-          'لا يمكن حذف مصروف معكوس',
+          'لا يمكن تعديل مصروف معكوس',
           400,
         );
       }
 
-      await tx.cashMovement.deleteMany({
-        where: { sourceType: 'EXPENSE', sourceId: id },
+      const oldValues: Record<string, unknown> = {};
+      const newValues: Record<string, unknown> = {};
+
+      if (
+        input.description !== undefined &&
+        input.description !== existing.description
+      ) {
+        oldValues.description = existing.description;
+        newValues.description = input.description;
+      }
+      if (input.notes !== undefined && input.notes !== existing.notes) {
+        oldValues.notes = existing.notes;
+        newValues.notes = input.notes;
+      }
+      if (input.categoryId !== undefined && input.categoryId !== existing.categoryId) {
+        const category = await tx.expenseCategory.findUnique({
+          where: { id: input.categoryId },
+          select: { id: true, isActive: true },
+        });
+        if (!category) {
+          throw new NotFoundException({
+            message: 'تصنيف المصروف غير موجود',
+            code: 'EXPENSE_CATEGORY_NOT_FOUND',
+          });
+        }
+        if (!category.isActive) {
+          throw new BusinessException(
+            'EXPENSE_CATEGORY_INACTIVE',
+            'تصنيف المصروف غير مفعّل',
+            400,
+          );
+        }
+        oldValues.categoryId = existing.categoryId;
+        newValues.categoryId = input.categoryId;
+      }
+      if (input.amount !== undefined) {
+        const newAmount = new Prisma.Decimal(input.amount);
+        if (!newAmount.equals(existing.amount)) {
+          oldValues.amount = existing.amount.toString();
+          newValues.amount = input.amount;
+        }
+      }
+      if (
+        input.expenseDate !== undefined &&
+        input.expenseDate.getTime() !== existing.expenseDate.getTime()
+      ) {
+        oldValues.expenseDate = existing.expenseDate.toISOString();
+        newValues.expenseDate = input.expenseDate.toISOString();
+      }
+
+      if (Object.keys(newValues).length === 0) {
+        return this.toExpense(existing);
+      }
+
+      const row = await tx.expense.update({
+        where: { id },
+        data: {
+          ...(input.description !== undefined
+            ? { description: input.description }
+            : {}),
+          ...(input.notes !== undefined ? { notes: input.notes } : {}),
+          ...(input.categoryId !== undefined
+            ? { categoryId: input.categoryId }
+            : {}),
+          ...(input.amount !== undefined
+            ? { amount: new Prisma.Decimal(input.amount) }
+            : {}),
+          ...(input.expenseDate !== undefined
+            ? { expenseDate: input.expenseDate }
+            : {}),
+        },
       });
 
-      await tx.expense.delete({ where: { id } });
+      // مزامنة حركة الصندوق المرتبطة عند تغيير المبلغ أو التاريخ
+      if (input.amount !== undefined || input.expenseDate !== undefined) {
+        await tx.cashMovement.updateMany({
+          where: { sourceType: 'EXPENSE', sourceId: id },
+          data: {
+            ...(input.amount !== undefined
+              ? { amount: new Prisma.Decimal(input.amount) }
+              : {}),
+            ...(input.expenseDate !== undefined
+              ? { movementDate: input.expenseDate }
+              : {}),
+          },
+        });
+      }
 
       await this.auditService.logTx(tx, {
         userId,
-        action: 'EXPENSE_DELETED',
+        action: 'EXPENSE_UPDATED',
         entityType: 'Expense',
         entityId: id,
-        oldValues: {
-          description: existing.description,
-          amount: existing.amount.toString(),
-        },
+        oldValues,
+        newValues,
         ipAddress: req.ip ?? null,
         userAgent: req.userAgent ?? null,
       });
 
-      return { success: true };
+      return this.toExpense(row);
     });
   }
 

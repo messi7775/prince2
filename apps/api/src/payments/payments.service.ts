@@ -1,3 +1,4 @@
+import { withSerializableRetry } from '../common/utils/with-serializable-retry';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '../generated/prisma';
 import type {
@@ -32,7 +33,7 @@ export class PaymentsService {
   // ───────────────────────────────────────────────────────────
   async listBySale(
     saleId: string,
-    query: PaginationInput,
+    query: PaginationInput & { status?: 'ACTIVE' | 'REVERSED' },
   ): Promise<PaginatedResponse<Payment>> {
     const sale = await this.prisma.sale.findUnique({
       where: { id: saleId },
@@ -46,7 +47,10 @@ export class PaymentsService {
     }
 
     const { page, limit, skip, take, order } = normalizePagination(query);
-    const where = { saleId };
+    const where = {
+      saleId,
+      ...(query.status ? { status: query.status } : {}),
+    };
 
     const [rows, total] = await Promise.all([
       this.prisma.payment.findMany({
@@ -73,7 +77,7 @@ export class PaymentsService {
     userId: string,
     req: { ip?: string; userAgent?: string },
   ): Promise<Payment> {
-    return this.prisma.$transaction(
+    return withSerializableRetry(() => this.prisma.$transaction(
       async (tx) => {
         // ─── 1. Lock Sale ───
         const locked = await tx.$queryRaw<
@@ -173,7 +177,7 @@ export class PaymentsService {
         isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
         timeout: 8000,
       },
-    ).then((row) => this.toPayment(row));
+    )).then((row) => this.toPayment(row));
   }
 
   // ───────────────────────────────────────────────────────────
@@ -266,7 +270,7 @@ export class PaymentsService {
     userId: string,
     req: { ip?: string; userAgent?: string },
   ): Promise<Payment> {
-    return this.prisma.$transaction(
+    return withSerializableRetry(() => this.prisma.$transaction(
       async (tx) => {
         const existing = await tx.payment.findUnique({
           where: { id: paymentId },
@@ -381,58 +385,7 @@ export class PaymentsService {
         isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
         timeout: 8000,
       },
-    );
-  }
-
-  // ───────────────────────────────────────────────────────────
-  // Delete payment — Transaction
-  // ───────────────────────────────────────────────────────────
-  async delete(
-    paymentId: string,
-    userId: string,
-    req: { ip?: string; userAgent?: string },
-  ): Promise<{ success: boolean }> {
-    return this.prisma.$transaction(async (tx) => {
-      const existing = await tx.payment.findUnique({
-        where: { id: paymentId },
-      });
-      if (!existing) {
-        throw new NotFoundException({
-          message: 'الدفعة غير موجودة',
-          code: 'PAYMENT_NOT_FOUND',
-        });
-      }
-
-      if (existing.status !== 'ACTIVE') {
-        throw new BusinessException(
-          'PAYMENT_NOT_ACTIVE',
-          'لا يمكن حذف دفعة معكوسة',
-          400,
-        );
-      }
-
-      // Delete associated cash movement
-      await tx.cashMovement.deleteMany({
-        where: { sourceType: 'SALE_PAYMENT', sourceId: paymentId },
-      });
-
-      await tx.payment.delete({ where: { id: paymentId } });
-
-      await this.auditService.logTx(tx, {
-        userId,
-        action: 'PAYMENT_DELETED',
-        entityType: 'Payment',
-        entityId: paymentId,
-        oldValues: {
-          saleId: existing.saleId,
-          amount: existing.amount.toString(),
-        },
-        ipAddress: req.ip ?? null,
-        userAgent: req.userAgent ?? null,
-      });
-
-      return { success: true };
-    });
+    ));
   }
 
   // ───────────────────────────────────────────────────────────

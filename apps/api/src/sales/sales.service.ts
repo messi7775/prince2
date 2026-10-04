@@ -27,6 +27,7 @@ import {
 } from '../common/utils/with-serializable-retry';
 import { generateInvoiceNumber } from './helpers/invoice-number.helper';
 import { allocateFifo } from './helpers/fifo.helper';
+import { outstandingSaleStock } from './helpers/sale-stock.helper';
 
 interface SaleListQuery extends PaginationInput {
   distributorId?: string;
@@ -46,9 +47,13 @@ export class SalesService {
   // List — paginated + filters
   // ───────────────────────────────────────────────────────────
   async list(query: SaleListQuery): Promise<PaginatedResponse<Sale>> {
-    const { page, limit, skip, take, order } = normalizePagination(query);
+    const { page, limit, skip, take, order, search } = normalizePagination(query);
 
     const where: Prisma.SaleWhereInput = {
+      ...(search ? { OR: [
+        { invoiceNumber: { contains: search, mode: 'insensitive' as const } },
+        { distributor: { name: { contains: search, mode: 'insensitive' as const } } },
+      ] } : {}),
       ...(query.distributorId ? { distributorId: query.distributorId } : {}),
       ...(query.status ? { status: query.status } : {}),
       ...(query.dateFrom || query.dateTo
@@ -67,7 +72,7 @@ export class SalesService {
         skip,
         take,
         orderBy: { saleDate: order },
-        include: { distributor: { select: { name: true } } },
+        include: { distributor: { select: { name: true } }, payments: { where: { status: 'ACTIVE' }, select: { amount: true } } },
       }),
       this.prisma.sale.count({ where }),
     ]);
@@ -75,6 +80,8 @@ export class SalesService {
     const data: Sale[] = rows.map((row) => ({
       ...this.toSale(row),
       distributorName: row.distributor.name,
+      paidAmount: toMoneyStringRequired(row.payments.reduce((sum, payment) => sum.plus(payment.amount), new Prisma.Decimal(0))),
+      remainingAmount: toMoneyStringRequired(row.totalAmount.minus(row.payments.reduce((sum, payment) => sum.plus(payment.amount), new Prisma.Decimal(0)))),
     }));
     const meta: PaginationMeta = buildPaginationMeta(total, page, limit);
 
@@ -89,6 +96,7 @@ export class SalesService {
       where: { id },
       include: {
         items: true,
+        distributor: { select: { name: true } },
         payments: { where: { status: 'ACTIVE' } },
       },
     });
@@ -120,10 +128,53 @@ export class SalesService {
 
     return {
       ...base,
+      distributorName: sale.distributor.name,
       items,
       paidAmount: toMoneyStringRequired(paidAmount),
       remainingAmount: toMoneyStringRequired(remainingAmount),
     };
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // Duplicate — نسخ فاتورة: فاتورة جديدة بنفس الموزع والبنود.
+  // يمر بنفس مسار create بالكامل (تحقق المخزون + FIFO + Audit)
+  // — الفاتورة الملغاة لا يمكن نسخها.
+  // ───────────────────────────────────────────────────────────
+  async duplicate(
+    id: string,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
+  ): Promise<SaleDetails> {
+    const original = await this.prisma.sale.findUnique({
+      where: { id },
+      include: { items: true },
+    });
+    if (!original) {
+      throw new NotFoundException({
+        message: 'الفاتورة غير موجودة',
+        code: 'SALE_NOT_FOUND',
+      });
+    }
+    if (original.status !== 'ACTIVE') {
+      throw new BusinessException(
+        'SALE_CANCELLED',
+        'لا يمكن نسخ فاتورة ملغاة',
+        400,
+      );
+    }
+
+    return this.create(
+      {
+        distributorId: original.distributorId,
+        items: original.items.map((item) => ({
+          packageId: item.packageId,
+          quantity: item.quantity,
+        })),
+        notes: original.notes ?? undefined,
+      },
+      userId,
+      req,
+    );
   }
 
   // ───────────────────────────────────────────────────────────
@@ -188,13 +239,19 @@ export class SalesService {
               }
             }
 
-            // ─── 3. FIFO allocations لكل item ───
+            // ─── 3. Merge duplicate package items ───
+            // مطلوب قبل FIFO: allocateFifo يقرأ الرصيد من الـ ledger قبل
+            // كتابة أي SELL movement، فتكرار نفس الباقة في بندين منفصلين
+            // قد يوزّع كمية أكبر من المخزون المتاح.
+            const mergedItems = this.mergeItems(input.items);
+
+            // ─── 3b. FIFO allocations لكل item ───
             const allAllocations: Array<{
               packageId: string;
               allocations: Awaited<ReturnType<typeof allocateFifo>>;
             }> = [];
 
-            for (const item of input.items) {
+            for (const item of mergedItems) {
               const allocations = await allocateFifo(
                 tx,
                 item.packageId,
@@ -216,8 +273,8 @@ export class SalesService {
               totalPrice: Prisma.Decimal;
             }> = [];
 
-            for (let idx = 0; idx < input.items.length; idx++) {
-              const item = input.items[idx];
+            for (let idx = 0; idx < mergedItems.length; idx++) {
+              const item = mergedItems[idx];
               const pkg = packageMap.get(item.packageId)!;
               const allocs = allAllocations[idx].allocations;
 
@@ -337,7 +394,7 @@ export class SalesService {
                 invoiceNumber,
                 distributorId: input.distributorId,
                 totalAmount: totalAmount.toString(),
-                itemsCount: input.items.length,
+                itemsCount: mergedItems.length,
                 ...(paymentId ? { initialPaymentId: paymentId } : {}),
               },
               ipAddress: req.ip ?? null,
@@ -364,7 +421,7 @@ export class SalesService {
     userId: string,
     req: { ip?: string; userAgent?: string },
   ): Promise<SaleDetails> {
-    return this.prisma.$transaction(
+    return withSerializableRetry(() => this.prisma.$transaction(
       async (tx) => {
         // ─── 1. Lock Sale first ───
         const locked = await tx.$queryRaw<{ id: string; status: string }[]>`
@@ -406,13 +463,7 @@ export class SalesService {
         }
 
         // ─── 3. Load SELL movements ───
-        const sellMovements = await tx.inventoryMovement.findMany({
-          where: {
-            referenceType: 'Sale',
-            referenceId: saleId,
-            type: 'SELL',
-          },
-        });
+        const sellMovements = await outstandingSaleStock(tx, saleId);
 
         // ─── 4. Lock affected PackageStock بترتيب deterministic ───
         const stockIds = Array.from(
@@ -506,7 +557,7 @@ export class SalesService {
         isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
         timeout: 15000,
       },
-    ).then((id) => this.findById(id));
+    )).then((id) => this.findById(id));
   }
 
   // ───────────────────────────────────────────────────────────
@@ -586,13 +637,7 @@ export class SalesService {
           }
 
           // ─── 4. Reverse old SELL movements (restore inventory) ───
-          const oldSellMovements = await tx.inventoryMovement.findMany({
-            where: {
-              referenceType: 'Sale',
-              referenceId: saleId,
-              type: 'SELL',
-            },
-          });
+          const oldSellMovements = await outstandingSaleStock(tx, saleId);
 
           // Lock affected stocks
           const oldStockIds = Array.from(
@@ -627,22 +672,19 @@ export class SalesService {
             where: { saleId },
           });
 
-          // ─── 6. Delete old SELL movements ───
-          await tx.inventoryMovement.deleteMany({
-            where: {
-              referenceType: 'Sale',
-              referenceId: saleId,
-              type: 'SELL',
-            },
-          });
+          // Keep old SELL/RETURN movements: their net allocation is now zero.
+          // Deleting SELL here would credit the inventory twice.
 
-          // ─── 7. FIFO allocate new items ───
+          // ─── 7. Merge duplicate package items + FIFO allocate new items ───
+          // (نفس قاعدة create: منع تكرار الباقة قبل FIFO)
+          const mergedItems = this.mergeItems(input.items);
+
           const allAllocations: Array<{
             packageId: string;
             allocations: Awaited<ReturnType<typeof allocateFifo>>;
           }> = [];
 
-          for (const item of input.items) {
+          for (const item of mergedItems) {
             const allocations = await allocateFifo(
               tx,
               item.packageId,
@@ -656,8 +698,8 @@ export class SalesService {
 
           // ─── 8. Calculate new totals from FIFO allocation prices (سعر الشدة) + create sale items ───
           let totalAmount = new Prisma.Decimal(0);
-          for (let idx = 0; idx < input.items.length; idx++) {
-            const item = input.items[idx];
+          for (let idx = 0; idx < mergedItems.length; idx++) {
+            const item = mergedItems[idx];
             const pkg = packageMap.get(item.packageId)!;
             const allocs = allAllocations[idx].allocations;
 
@@ -734,7 +776,7 @@ export class SalesService {
             },
             newValues: {
               totalAmount: totalAmount.toString(),
-              itemsCount: input.items.length,
+              itemsCount: mergedItems.length,
             },
             ipAddress: req.ip ?? null,
             userAgent: req.userAgent ?? null,
@@ -753,6 +795,29 @@ export class SalesService {
   // ───────────────────────────────────────────────────────────
   // Helpers
   // ───────────────────────────────────────────────────────────
+
+  /**
+   * mergeItems — يدمج البنود المكررة (نفس packageId) في بند واحد.
+   *
+   * ضروري قبل FIFO: allocateFifo يقرأ الرصيد من ledger قبل كتابة أي
+   * SELL movement، فتكرار نفس الباقة في بندين قد يوزّع أكثر من المتاح.
+   */
+  private mergeItems(
+    items: Array<{ packageId: string; quantity: number }>,
+  ): Array<{ packageId: string; quantity: number }> {
+    const merged = new Map<string, number>();
+    for (const item of items) {
+      merged.set(
+        item.packageId,
+        (merged.get(item.packageId) ?? 0) + item.quantity,
+      );
+    }
+    return Array.from(merged.entries()).map(([packageId, quantity]) => ({
+      packageId,
+      quantity,
+    }));
+  }
+
   private toSale(row: {
     id: string;
     invoiceNumber: string;

@@ -6,6 +6,9 @@ import type {
   DashboardTopPackage,
   DashboardDistributorDebt,
   DashboardRecentTransaction,
+  DashboardPeriod,
+  DashboardPeriodStats,
+  DashboardSeriesPoint,
 } from '@prince-net/types';
 import { PrismaService } from '../prisma/prisma.service';
 import { toMoneyStringRequired } from '../common/utils/money.util';
@@ -17,7 +20,7 @@ const RECENT_TRANSACTIONS_LIMIT = 10;
 export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async get(): Promise<DashboardData> {
+  async get(period: DashboardPeriod = 'today'): Promise<DashboardData> {
     const now = new Date();
     const startOfToday = new Date(
       now.getFullYear(),
@@ -106,6 +109,52 @@ export class DashboardService {
       cashOutAgg._sum.amount ?? new Prisma.Decimal(0),
     );
 
+    // ─── Current financial summary (excludes REVERSED) ───
+    const [
+      totalPaymentsAgg,
+      totalExpensesAgg,
+      totalOwnerWithdrawalsAgg,
+    ] = await Promise.all([
+      this.prisma.payment.aggregate({
+        where: { status: 'ACTIVE', sale: { status: 'ACTIVE' } },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      this.prisma.expense.aggregate({
+        where: { status: 'ACTIVE' },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      this.prisma.ownerWithdrawal.aggregate({
+        where: { status: 'ACTIVE' },
+        _sum: { amount: true },
+        _count: true,
+      }),
+    ]);
+
+    const financialSummary = {
+      totalPayments: toMoneyStringRequired(
+        totalPaymentsAgg._sum.amount ?? new Prisma.Decimal(0),
+      ),
+      totalExpenses: toMoneyStringRequired(
+        totalExpensesAgg._sum.amount ?? new Prisma.Decimal(0),
+      ),
+      totalOwnerWithdrawals: toMoneyStringRequired(
+        totalOwnerWithdrawalsAgg._sum.amount ?? new Prisma.Decimal(0),
+      ),
+      cashIn: toMoneyStringRequired(
+        cashInAgg._sum.amount ?? new Prisma.Decimal(0),
+      ),
+      cashOut: toMoneyStringRequired(
+        cashOutAgg._sum.amount ?? new Prisma.Decimal(0),
+      ),
+      cashBalance: toMoneyStringRequired(cashBalance),
+      transactionsCount:
+        totalPaymentsAgg._count +
+        totalExpensesAgg._count +
+        totalOwnerWithdrawalsAgg._count,
+    };
+
     // ─── Total distributor debt ───
     const [allSalesAgg, allPaymentsAgg] = await Promise.all([
       this.prisma.sale.aggregate({
@@ -139,6 +188,12 @@ export class DashboardService {
     // ─── Distributor debts (top 5) ───
     const distributorDebts = await this.buildDistributorDebts();
 
+    // ─── Period stats (فترة مختارة + مقارنة بالفترة السابقة) ───
+    const periodStats = await this.buildPeriodStats(period, now);
+
+    // ─── Series — آخر 14 يومًا (مبيعات/تحصيلات يومية) ───
+    const series = await this.buildDailySeries(now);
+
     // ─── Recent transactions ───
     const recentTransactions = await this.buildRecentTransactions();
 
@@ -154,7 +209,189 @@ export class DashboardService {
       topPackages,
       distributorDebts,
       recentTransactions,
+      financialSummary,
+      periodStats,
+      series,
     };
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // Period Stats — فترة مختارة مع مقارنة بالفترة السابقة
+  // Sales ≠ Collections (فصل واضح بين الفواتير والتحصيلات)
+  // NetCashFlow = IN - OUT من cash_movements في الفترة
+  // ───────────────────────────────────────────────────────────
+  private periodRange(
+    period: DashboardPeriod,
+    now: Date,
+  ): { from: Date; to: Date } {
+    const to = now;
+    let from: Date;
+
+    switch (period) {
+      case 'week': {
+        from = new Date(now);
+        from.setDate(from.getDate() - 6);
+        from.setHours(0, 0, 0, 0);
+        break;
+      }
+      case 'month':
+        from = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+        break;
+      case 'year':
+        from = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+        break;
+      default:
+        from = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate(),
+          0,
+          0,
+          0,
+          0,
+      );
+    }
+
+    return { from, to };
+  }
+
+  private async computePeriodNumbers(from: Date, to: Date): Promise<{
+    sales: Prisma.Decimal;
+    collections: Prisma.Decimal;
+    expenses: Prisma.Decimal;
+    netCashFlow: Prisma.Decimal;
+    salesCount: number;
+  }> {
+    const [salesAgg, salesCount, collectionsAgg, expensesAgg, cashInAgg, cashOutAgg] =
+      await Promise.all([
+        this.prisma.sale.aggregate({
+          where: { status: 'ACTIVE', saleDate: { gte: from, lte: to } },
+          _sum: { totalAmount: true },
+        }),
+        this.prisma.sale.count({
+          where: { status: 'ACTIVE', saleDate: { gte: from, lte: to } },
+        }),
+        this.prisma.payment.aggregate({
+          where: {
+            status: 'ACTIVE',
+            paymentDate: { gte: from, lte: to },
+            sale: { status: 'ACTIVE' },
+          },
+          _sum: { amount: true },
+        }),
+        this.prisma.expense.aggregate({
+          where: { status: 'ACTIVE', expenseDate: { gte: from, lte: to } },
+          _sum: { amount: true },
+        }),
+        this.prisma.cashMovement.aggregate({
+          where: { direction: 'IN', movementDate: { gte: from, lte: to } },
+          _sum: { amount: true },
+        }),
+        this.prisma.cashMovement.aggregate({
+          where: { direction: 'OUT', movementDate: { gte: from, lte: to } },
+          _sum: { amount: true },
+        }),
+      ]);
+
+    return {
+      sales: salesAgg._sum.totalAmount ?? new Prisma.Decimal(0),
+      collections: collectionsAgg._sum.amount ?? new Prisma.Decimal(0),
+      expenses: expensesAgg._sum.amount ?? new Prisma.Decimal(0),
+      netCashFlow: (cashInAgg._sum.amount ?? new Prisma.Decimal(0)).minus(
+        cashOutAgg._sum.amount ?? new Prisma.Decimal(0),
+      ),
+      salesCount,
+    };
+  }
+
+  private async buildPeriodStats(
+    period: DashboardPeriod,
+    now: Date,
+  ): Promise<DashboardPeriodStats> {
+    const { from, to } = this.periodRange(period, now);
+    const current = await this.computePeriodNumbers(from, to);
+
+    // الفترة السابقة بنفس الطول
+    const durationMs = to.getTime() - from.getTime();
+    const prevTo = new Date(from.getTime() - 1);
+    const prevFrom = new Date(prevTo.getTime() - durationMs);
+    const previous = await this.computePeriodNumbers(prevFrom, prevTo);
+
+    const growth = (cur: Prisma.Decimal, prev: Prisma.Decimal): number | null => {
+      if (prev.isZero()) return null;
+      return Number(cur.minus(prev).div(prev).times(100).toFixed(2));
+    };
+
+    return {
+      sales: toMoneyStringRequired(current.sales),
+      collections: toMoneyStringRequired(current.collections),
+      expenses: toMoneyStringRequired(current.expenses),
+      netCashFlow: toMoneyStringRequired(current.netCashFlow),
+      salesCount: current.salesCount,
+      previous: {
+        sales: toMoneyStringRequired(previous.sales),
+        collections: toMoneyStringRequired(previous.collections),
+        expenses: toMoneyStringRequired(previous.expenses),
+        netCashFlow: toMoneyStringRequired(previous.netCashFlow),
+      },
+      growth: {
+        sales: growth(current.sales, previous.sales),
+        collections: growth(current.collections, previous.collections),
+        expenses: growth(current.expenses, previous.expenses),
+        netCashFlow: growth(current.netCashFlow, previous.netCashFlow),
+      },
+    };
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // Daily Series — آخر 14 يومًا (مبيعات/تحصيلات)
+  // ───────────────────────────────────────────────────────────
+  private async buildDailySeries(now: Date): Promise<DashboardSeriesPoint[]> {
+    const from = new Date(now);
+    from.setDate(from.getDate() - 13);
+    from.setHours(0, 0, 0, 0);
+
+    const [sales, payments] = await Promise.all([
+      this.prisma.sale.findMany({
+        where: { status: 'ACTIVE', saleDate: { gte: from, lte: now } },
+        select: { saleDate: true, totalAmount: true },
+      }),
+      this.prisma.payment.findMany({
+        where: {
+          status: 'ACTIVE',
+          paymentDate: { gte: from, lte: now },
+          sale: { status: 'ACTIVE' },
+        },
+        select: { paymentDate: true, amount: true },
+      }),
+    ]);
+
+    const byDay = new Map<string, { sales: Prisma.Decimal; collections: Prisma.Decimal }>();
+    for (let i = 0; i < 14; i += 1) {
+      const day = new Date(from);
+      day.setDate(day.getDate() + i);
+      byDay.set(day.toISOString().slice(0, 10), {
+        sales: new Prisma.Decimal(0),
+        collections: new Prisma.Decimal(0),
+      });
+    }
+
+    for (const sale of sales) {
+      const key = sale.saleDate.toISOString().slice(0, 10);
+      const bucket = byDay.get(key);
+      if (bucket) bucket.sales = bucket.sales.plus(sale.totalAmount);
+    }
+    for (const payment of payments) {
+      const key = payment.paymentDate.toISOString().slice(0, 10);
+      const bucket = byDay.get(key);
+      if (bucket) bucket.collections = bucket.collections.plus(payment.amount);
+    }
+
+    return Array.from(byDay.entries()).map(([date, bucket]) => ({
+      date,
+      sales: toMoneyStringRequired(bucket.sales),
+      collections: toMoneyStringRequired(bucket.collections),
+    }));
   }
 
   // ───────────────────────────────────────────────────────────

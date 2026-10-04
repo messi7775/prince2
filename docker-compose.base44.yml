@@ -1,0 +1,113 @@
+# Base44 development compose — single-origin wiring.
+# Vite (web) on host port 3000, proxies /api to the NestJS API (internal port 3001).
+services:
+  db:
+    image: postgres:16-bookworm
+    environment:
+      POSTGRES_USER: prince_net
+      POSTGRES_PASSWORD: prince_net_dev
+      POSTGRES_DB: prince_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prince_net"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: on-failure
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # One-shot: build shared packages, generate Prisma client, apply migrations, seed.
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.base44
+    volumes: &app-volumes
+      - .:/app
+      - node_modules:/app/node_modules
+      - api_node_modules:/app/apps/api/node_modules
+      - web_node_modules:/app/apps/web/node_modules
+      - pkg_types:/app/packages/types/node_modules
+      - pkg_validation:/app/packages/validation/node_modules
+      - pkg_config:/app/packages/config/node_modules
+    env_file:
+      - ./.env.base44-defaults
+      - /run/base44/app.env
+    environment:
+      - DATABASE_URL=postgresql://prince_net:prince_net_dev@db:5432/prince_net?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["sh", "-ec", "pnpm build:packages && pnpm prisma:generate && pnpm prisma:deploy && pnpm prisma:seed"]
+    restart: "no"
+
+  # NestJS API — dev mode with watch, internal port 3001.
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.base44
+    # Cannot extend a YAML alias — explicit list = app-volumes + backups volume.
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+      - api_node_modules:/app/apps/api/node_modules
+      - web_node_modules:/app/apps/web/node_modules
+      - pkg_types:/app/packages/types/node_modules
+      - pkg_validation:/app/packages/validation/node_modules
+      - pkg_config:/app/packages/config/node_modules
+      - backups:/tmp/prince-net-backups
+    env_file:
+      - ./.env.base44-defaults
+      - /run/base44/app.env
+    environment:
+      - DATABASE_URL=postgresql://prince_net:prince_net_dev@db:5432/prince_net?schema=public
+      - PORT=3001
+      - CORS_ORIGIN=http://localhost:3000
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    command: ["sh", "-ec", "pnpm build:packages && pnpm prisma:generate && exec pnpm --filter @prince-net/api dev"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:3001/api/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 90s
+    restart: on-failure
+
+  # Vite web app — port 5173 inside container, mapped to host port 3000.
+  # Proxies /api to the API service via API_PROXY_TARGET.
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.base44
+    volumes: *app-volumes
+    env_file:
+      - ./.env.base44-defaults
+      - /run/base44/app.env
+    environment:
+      - API_PROXY_TARGET=http://api:3001
+    depends_on:
+      api:
+        condition: service_healthy
+    command: ["sh", "-ec", "exec pnpm --filter @prince-net/web dev"]
+    ports:
+      - "3000:5173"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:5173 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    restart: on-failure
+
+volumes:
+  pgdata:
+  node_modules:
+  api_node_modules:
+  web_node_modules:
+  pkg_types:
+  pkg_validation:
+  pkg_config:
+  backups:

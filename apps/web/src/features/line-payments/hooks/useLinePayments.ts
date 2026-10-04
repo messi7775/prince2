@@ -6,6 +6,7 @@ interface UseLinePaymentsParams {
   page: number;
   limit: number;
   order?: 'asc' | 'desc';
+  status?: 'ACTIVE' | 'REVERSED';
 }
 
 export function useLinePayments({
@@ -13,11 +14,12 @@ export function useLinePayments({
   page,
   limit,
   order = 'desc',
+  status,
 }: UseLinePaymentsParams) {
   return useQuery({
-    queryKey: ['lines', lineId, 'payments', { page, limit, order }],
+    queryKey: ['lines', lineId, 'payments', { page, limit, order, status }],
     queryFn: () =>
-      listLinePaymentsByLine({ lineId: lineId!, page, limit, order }),
+      listLinePaymentsByLine({ lineId: lineId!, page, limit, order, status }),
     enabled: !!lineId,
     staleTime: 30_000,
   });

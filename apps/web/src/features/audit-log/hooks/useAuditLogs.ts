@@ -8,6 +8,8 @@ interface UseAuditLogsParams {
   search?: string;
   action?: AuditAction;
   entityType?: string;
+  entityId?: string;
+  userId?: string;
   dateFrom?: string;
   dateTo?: string;
 }

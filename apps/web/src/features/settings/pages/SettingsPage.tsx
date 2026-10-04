@@ -1,3 +1,5 @@
+import { ActivityTimeline } from '../../../components/activity/ActivityTimeline';
+import { useAuth } from '../../auth/hooks/useAuth';
 import { Settings as SettingsIcon, Shield } from 'lucide-react';
 import type { UpdateSettingsInput } from '@prince-net/validation';
 import { PageHeader } from '../../../components/layout/PageHeader';
@@ -19,6 +21,7 @@ import { ApiClientError } from '../../../lib/api-client';
 
 export function SettingsPage() {
     const { toast } = useToast();
+    const { user } = useAuth();
 
     const settingsQuery = useSettings();
     const updateMutation = useUpdateSettings();
@@ -97,6 +100,7 @@ export function SettingsPage() {
     <ChangePasswordForm />
     </CardContent>
     </Card>
+    {user && <ActivityTimeline userId={user.id} title="نشاط المستخدم" />}
     </div>
   );
 }

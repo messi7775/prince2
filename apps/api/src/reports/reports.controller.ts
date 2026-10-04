@@ -45,8 +45,29 @@ export class ReportsController {
   }
 
   @Get('distributors')
-  async distributorsReport() {
-    return this.reportsService.distributorsReport();
+  async distributorsReport(
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortDir') sortDir?: string,
+  ) {
+    return this.reportsService.distributorsReport({
+      ...(dateFrom ? { dateFrom } : {}),
+      ...(dateTo ? { dateTo } : {}),
+      ...(sortBy ? { sortBy } : {}),
+      ...(sortDir === 'asc' || sortDir === 'desc' ? { sortDir } : {}),
+    });
+  }
+
+  @Get('profitability')
+  async profitabilityReport(
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
+    return this.reportsService.profitabilityReport({
+      ...(dateFrom ? { dateFrom } : {}),
+      ...(dateTo ? { dateTo } : {}),
+    });
   }
 
   @Get('expenses')

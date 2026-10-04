@@ -9,7 +9,7 @@ import {
     TableHeader,
     TableRow,
 } from '../../../components/ui/table';
-import { Badge } from '../../../components/ui/badge';
+import { InvoiceStatusBadge } from './InvoiceStatusBadge';
 import { EmptyState } from '../../../components/ui/empty-state';
 import { formatMoney } from '../../../lib/currency';
 import { formatDateTime } from '../../../lib/format';
@@ -63,11 +63,7 @@ export function SalesTable({ data }: SalesTableProps) {
                 { formatMoney(sale.totalAmount) }
                     </TableCell>
                     < TableCell >
-                    <Badge
-                  variant={ sale.status === 'ACTIVE' ? 'success' : 'destructive' }
-                >
-    { sale.status === 'ACTIVE' ? 'نشطة' : 'ملغاة' }
-        </Badge>
+                    <InvoiceStatusBadge sale={sale} />
         </TableCell>
         </TableRow>
           ))

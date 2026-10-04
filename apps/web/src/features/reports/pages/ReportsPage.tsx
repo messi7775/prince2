@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Printer } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Printer, Share2 } from 'lucide-react';
+import { useSharePdf } from '../../../lib/use-share-pdf';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { Button } from '../../../components/ui/button';
 import {
@@ -13,6 +14,7 @@ import { SalesReportTab } from '../components/SalesReportTab';
 import { CashReportTab } from '../components/CashReportTab';
 import { InventoryReportTab } from '../components/InventoryReportTab';
 import { DistributorsReportTab } from '../components/DistributorsReportTab';
+import { ProfitabilityReportTab } from '../components/ProfitabilityReportTab';
 import { ExpensesReportTab } from '../components/ExpensesReportTab';
 import { LinesReportTab } from '../components/LinesReportTab';
 import { CollectionsReportTab } from '../components/CollectionsReportTab';
@@ -31,17 +33,36 @@ function getDefaultDateTo(): string {
 export function ReportsPage() {
   const [dateFrom, setDateFrom] = useState(getDefaultDateFrom);
   const [dateTo, setDateTo] = useState(getDefaultDateTo);
+  const [isSharingPdf, setIsSharingPdf] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const { shareElement } = useSharePdf();
+
+  const handleSharePdf = async () => {
+    if (!contentRef.current || isSharingPdf) return;
+    setIsSharingPdf(true);
+    try {
+      await shareElement(contentRef.current, `تقرير-${dateTo}.pdf`);
+    } finally {
+      setIsSharingPdf(false);
+    }
+  };
 
   return (
-    <div className="space-y-6">
+    <div ref={contentRef} className="space-y-6">
       <PageHeader
         title="التقارير"
         description="تقارير مالية وتشغيلية"
         actions={
-          <Button variant="outline" onClick={() => window.print()}>
-            <Printer className="me-2 h-4 w-4" />
-            طباعة
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => window.print()}>
+              <Printer className="me-2 h-4 w-4" />
+              طباعة
+            </Button>
+            <Button variant="outline" onClick={handleSharePdf} disabled={isSharingPdf}>
+              <Share2 className="me-2 h-4 w-4" />
+              {isSharingPdf ? 'جارٍ الإنشاء...' : 'مشاركة PDF'}
+            </Button>
+          </div>
         }
       />
 
@@ -58,6 +79,7 @@ export function ReportsPage() {
           <TabsTrigger value="collections">التحصيلات</TabsTrigger>
           <TabsTrigger value="cash">الصندوق</TabsTrigger>
           <TabsTrigger value="inventory">المخزون</TabsTrigger>
+          <TabsTrigger value="profitability">الأرباح</TabsTrigger>
           <TabsTrigger value="distributors">الموزعون</TabsTrigger>
           <TabsTrigger value="expenses">المصروفات</TabsTrigger>
           <TabsTrigger value="owner-withdrawals">سحوبات المالك</TabsTrigger>
@@ -80,8 +102,12 @@ export function ReportsPage() {
           <InventoryReportTab dateFrom={dateFrom} dateTo={dateTo} />
         </TabsContent>
 
+        <TabsContent value="profitability">
+          <ProfitabilityReportTab dateFrom={dateFrom} dateTo={dateTo} />
+        </TabsContent>
+
         <TabsContent value="distributors">
-          <DistributorsReportTab />
+          <DistributorsReportTab dateFrom={dateFrom} dateTo={dateTo} />
         </TabsContent>
 
         <TabsContent value="expenses">

@@ -8,15 +8,15 @@ import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Pagination } from '../../../components/ui/pagination';
 import { useToast } from '../../../components/ui/use-toast';
-import { ConfirmDialog } from '../../../components/feedback/ConfirmDialog';
 import { useOwnerWithdrawals } from '../hooks/useOwnerWithdrawals';
 import { useCreateOwnerWithdrawal } from '../hooks/useCreateOwnerWithdrawal';
 import { useUpdateOwnerWithdrawal } from '../hooks/useUpdateOwnerWithdrawal';
-import { useDeleteOwnerWithdrawal } from '../hooks/useDeleteOwnerWithdrawal';
 import { OwnerWithdrawalsFilters } from '../components/OwnerWithdrawalsFilters';
 import { OwnerWithdrawalsTable } from '../components/OwnerWithdrawalsTable';
 import { OwnerWithdrawalFormDialog } from '../components/OwnerWithdrawalFormDialog';
+import { ReverseOwnerWithdrawalDialog } from '../components/ReverseOwnerWithdrawalDialog';
 import { printHTML, buildWithdrawalReceipt } from '../../../lib/print';
+import { useSharePdf } from '../../../lib/use-share-pdf';
 import { formatMoney } from '../../../lib/currency';
 import { formatDate } from '../../../lib/format';
 import { ApiClientError } from '../../../lib/api-client';
@@ -26,6 +26,7 @@ type StatusFilter = 'ALL' | 'ACTIVE' | 'REVERSED';
 
 export function OwnerWithdrawalsPage() {
   const { toast } = useToast();
+  const { shareReceipt } = useSharePdf();
 
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<StatusFilter>('ALL');
@@ -34,7 +35,7 @@ export function OwnerWithdrawalsPage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<OwnerWithdrawal | null>(null);
-  const [deleteTarget, setDeleteTarget] =
+  const [reverseTarget, setReverseTarget] =
     useState<OwnerWithdrawal | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useOwnerWithdrawals({
@@ -47,7 +48,6 @@ export function OwnerWithdrawalsPage() {
 
   const createMutation = useCreateOwnerWithdrawal();
   const updateMutation = useUpdateOwnerWithdrawal();
-  const deleteMutation = useDeleteOwnerWithdrawal();
   const isSubmitting =
     createMutation.isPending || updateMutation.isPending;
 
@@ -81,21 +81,6 @@ export function OwnerWithdrawalsPage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    try {
-      await deleteMutation.mutateAsync(deleteTarget.id);
-      toast({ title: 'تم الحذف' });
-      setDeleteTarget(null);
-    } catch (err) {
-      toast({
-        variant: 'destructive',
-        title: 'فشل الحذف',
-        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
-      });
-    }
-  };
-
   const handlePrint = (w: OwnerWithdrawal) => {
     printHTML(
       buildWithdrawalReceipt({
@@ -106,6 +91,19 @@ export function OwnerWithdrawalsPage() {
         notes: w.notes,
       }),
       'سند سحب',
+    );
+  };
+
+  const handleSharePdf = (w: OwnerWithdrawal) => {
+    void shareReceipt(
+      buildWithdrawalReceipt({
+        date: formatDate(w.withdrawalDate),
+        reason: w.reason,
+        amount: formatMoney(w.amount),
+        status: w.status,
+        notes: w.notes,
+      }),
+      `سند-سحب-${w.id}.pdf`,
     );
   };
 
@@ -155,8 +153,9 @@ export function OwnerWithdrawalsPage() {
           <OwnerWithdrawalsTable
             data={data.data}
             onEdit={handleEdit}
-            onDelete={setDeleteTarget}
+            onReverse={setReverseTarget}
             onPrint={handlePrint}
+            onSharePdf={handleSharePdf}
           />
           {totalPages > 1 && (
             <Pagination
@@ -179,15 +178,10 @@ export function OwnerWithdrawalsPage() {
         initialData={editing}
       />
 
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
-        onConfirm={handleDelete}
-        title="حذف السحب"
-        description={`سيتم حذف سحب "${deleteTarget?.reason ?? ''}" نهائيًا. هل أنت متأكد؟`}
-        confirmLabel="حذف"
-        variant="destructive"
-        isLoading={deleteMutation.isPending}
+      <ReverseOwnerWithdrawalDialog
+        open={!!reverseTarget}
+        onOpenChange={(open) => !open && setReverseTarget(null)}
+        withdrawal={reverseTarget}
       />
     </div>
   );

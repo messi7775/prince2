@@ -18,3 +18,4 @@ export * from "./settings";
 export * from "./dashboard";
 export * from "./report";
 export * from "./search";
+export * from "./notification";

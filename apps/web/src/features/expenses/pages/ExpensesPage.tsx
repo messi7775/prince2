@@ -8,17 +8,17 @@ import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Pagination } from '../../../components/ui/pagination';
 import { useToast } from '../../../components/ui/use-toast';
-import { ConfirmDialog } from '../../../components/feedback/ConfirmDialog';
 import { useExpenseCategories } from '../../expense-categories/hooks/useExpenseCategories';
 import { ExpenseCategoriesDialog } from '../../expense-categories/components/ExpenseCategoriesDialog';
 import { useExpenses } from '../hooks/useExpenses';
 import { useCreateExpense } from '../hooks/useCreateExpense';
 import { useUpdateExpense } from '../hooks/useUpdateExpense';
-import { useDeleteExpense } from '../hooks/useDeleteExpense';
 import { ExpensesFilters } from '../components/ExpensesFilters';
 import { ExpensesTable } from '../components/ExpensesTable';
 import { ExpenseFormDialog } from '../components/ExpenseFormDialog';
+import { ReverseExpenseDialog } from '../components/ReverseExpenseDialog';
 import { printHTML, buildExpenseReceipt } from '../../../lib/print';
+import { useSharePdf } from '../../../lib/use-share-pdf';
 import { formatMoney } from '../../../lib/currency';
 import { formatDate } from '../../../lib/format';
 import { ApiClientError } from '../../../lib/api-client';
@@ -28,17 +28,19 @@ type StatusFilter = 'ALL' | 'ACTIVE' | 'REVERSED';
 
 export function ExpensesPage() {
   const { toast } = useToast();
+  const { shareReceipt } = useSharePdf();
 
   const [page, setPage] = useState(1);
   const [categoryId, setCategoryId] = useState('');
   const [status, setStatus] = useState<StatusFilter>('ALL');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [order, setOrder] = useState<'asc' | 'desc'>('desc');
 
   const [formOpen, setFormOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Expense | null>(null);
+  const [reverseTarget, setReverseTarget] = useState<Expense | null>(null);
 
   const categoriesQuery = useExpenseCategories();
 
@@ -49,11 +51,11 @@ export function ExpensesPage() {
     status: status === 'ALL' ? undefined : status,
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
+    order,
   });
 
   const createMutation = useCreateExpense();
   const updateMutation = useUpdateExpense();
-  const deleteMutation = useDeleteExpense();
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const handleCreate = () => {
@@ -86,21 +88,6 @@ export function ExpensesPage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    try {
-      await deleteMutation.mutateAsync(deleteTarget.id);
-      toast({ title: 'تم الحذف' });
-      setDeleteTarget(null);
-    } catch (err) {
-      toast({
-        variant: 'destructive',
-        title: 'فشل الحذف',
-        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
-      });
-    }
-  };
-
   const handlePrint = (expense: Expense) => {
     const category = (categoriesQuery.data ?? []).find(
       (c) => c.id === expense.categoryId,
@@ -115,6 +102,23 @@ export function ExpensesPage() {
         notes: expense.notes,
       }),
       'سند مصروف',
+    );
+  };
+
+  const handleSharePdf = (expense: Expense) => {
+    const category = (categoriesQuery.data ?? []).find(
+      (c) => c.id === expense.categoryId,
+    );
+    void shareReceipt(
+      buildExpenseReceipt({
+        date: formatDate(expense.expenseDate),
+        category: category?.name ?? '—',
+        description: expense.description,
+        amount: formatMoney(expense.amount),
+        status: expense.status,
+        notes: expense.notes,
+      }),
+      `سند-مصروف-${expense.id}.pdf`,
     );
   };
 
@@ -160,6 +164,11 @@ export function ExpensesPage() {
           setDateTo(v);
           setPage(1);
         }}
+        order={order}
+        onOrderChange={(v) => {
+          setOrder(v);
+          setPage(1);
+        }}
       />
 
       {isLoading ? (
@@ -176,8 +185,9 @@ export function ExpensesPage() {
             data={data.data}
             categories={categoriesQuery.data ?? []}
             onEdit={handleEdit}
-            onDelete={setDeleteTarget}
+            onReverse={setReverseTarget}
             onPrint={handlePrint}
+            onSharePdf={handleSharePdf}
           />
           {totalPages > 1 && (
             <Pagination
@@ -200,15 +210,10 @@ export function ExpensesPage() {
         isSubmitting={isSubmitting}
       />
 
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
-        onConfirm={handleDelete}
-        title="حذف المصروف"
-        description={`سيتم حذف "${deleteTarget?.description ?? ''}" نهائيًا. هل أنت متأكد؟`}
-        confirmLabel="حذف"
-        variant="destructive"
-        isLoading={deleteMutation.isPending}
+      <ReverseExpenseDialog
+        open={!!reverseTarget}
+        onOpenChange={(open) => !open && setReverseTarget(null)}
+        expense={reverseTarget}
       />
 
       <ExpenseCategoriesDialog

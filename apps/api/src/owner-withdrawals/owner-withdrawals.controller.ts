@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -84,19 +83,6 @@ export class OwnerWithdrawalsController {
     @Req() req: Request,
   ) {
     return this.ownerWithdrawalsService.update(id, body, user.userId, {
-      ip: req.ip,
-      userAgent: req.get('user-agent'),
-    });
-  }
-
-  @Delete(':id')
-  @HttpCode(HttpStatus.OK)
-  async delete(
-    @Param('id') id: string,
-    @CurrentUser() user: AuthUser,
-    @Req() req: Request,
-  ) {
-    return this.ownerWithdrawalsService.delete(id, user.userId, {
       ip: req.ip,
       userAgent: req.get('user-agent'),
     });

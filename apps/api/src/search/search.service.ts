@@ -16,7 +16,7 @@ export class SearchService {
       return { results: [] };
     }
 
-    const [distributors, packages, sales, lines, expenses] =
+    const [distributors, packages, sales, lines, expenses, payments] =
       await Promise.all([
         this.prisma.distributor.findMany({
           where: {
@@ -115,6 +115,24 @@ export class SearchService {
             status: true,
           },
         }),
+
+        this.prisma.payment.findMany({
+          where: {
+            OR: [
+              { sale: { invoiceNumber: { contains: q, mode: 'insensitive' } } },
+              { notes: { contains: q, mode: 'insensitive' } },
+            ],
+          },
+          take: MAX_RESULTS,
+          select: {
+            id: true,
+            amount: true,
+            status: true,
+            sale: {
+              select: { id: true, invoiceNumber: true },
+            },
+          },
+        }),
       ]);
 
     const results: SearchResult[] = [
@@ -133,7 +151,7 @@ export class SearchService {
         title: p.name,
         subtitle: p.price.toString(),
         amount: toMoneyStringRequired(p.price),
-        url: `/packages/${p.id}`,
+        url: `/inventory/${p.id}`,
       })),
 
       ...sales.map((s) => ({
@@ -160,7 +178,16 @@ export class SearchService {
         title: e.description,
         subtitle: e.status,
         amount: toMoneyStringRequired(e.amount),
-        url: `/expenses/${e.id}`,
+        url: '/expenses',
+      })),
+
+      ...payments.map((p) => ({
+        type: 'PAYMENT' as const,
+        id: p.id,
+        title: `دفعة — ${p.sale.invoiceNumber}`,
+        subtitle: p.status === 'ACTIVE' ? 'نشطة' : 'معكوسة',
+        amount: toMoneyStringRequired(p.amount),
+        url: `/sales/${p.sale.id}`,
       })),
     ];
 

@@ -305,54 +305,6 @@ export class OwnerWithdrawalsService {
     });
   }
 
-  async delete(
-    id: string,
-    userId: string,
-    req: { ip?: string; userAgent?: string },
-  ): Promise<{ success: boolean }> {
-    return this.prisma.$transaction(async (tx) => {
-      const existing = await tx.ownerWithdrawal.findUnique({
-        where: { id },
-      });
-      if (!existing) {
-        throw new NotFoundException({
-          message: 'السحب غير موجود',
-          code: 'OWNER_WITHDRAWAL_NOT_FOUND',
-        });
-      }
-
-      if (existing.status !== 'ACTIVE') {
-        throw new BusinessException(
-          'OWNER_WITHDRAWAL_NOT_ACTIVE',
-          'لا يمكن حذف سحب معكوس',
-          400,
-        );
-      }
-
-      // Delete associated cash movement
-      await tx.cashMovement.deleteMany({
-        where: { sourceType: 'OWNER_WITHDRAWAL', sourceId: id },
-      });
-
-      await tx.ownerWithdrawal.delete({ where: { id } });
-
-      await this.auditService.logTx(tx, {
-        userId,
-        action: 'OWNER_WITHDRAWAL_DELETED',
-        entityType: 'OwnerWithdrawal',
-        entityId: id,
-        oldValues: {
-          amount: existing.amount.toString(),
-          reason: existing.reason,
-        },
-        ipAddress: req.ip ?? null,
-        userAgent: req.userAgent ?? null,
-      });
-
-      return { success: true };
-    });
-  }
-
   private toOwnerWithdrawal(row: {
     id: string;
     amount: Prisma.Decimal;

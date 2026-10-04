@@ -28,7 +28,7 @@ export class LinePaymentsService {
 
   async listByLine(
     lineId: string,
-    query: PaginationInput,
+    query: PaginationInput & { status?: 'ACTIVE' | 'REVERSED' },
   ): Promise<PaginatedResponse<LinePayment>> {
     const line = await this.prisma.line.findUnique({
       where: { id: lineId },
@@ -42,7 +42,10 @@ export class LinePaymentsService {
     }
 
     const { page, limit, skip, take, order } = normalizePagination(query);
-    const where = { lineId };
+    const where = {
+      lineId,
+      ...(query.status ? { status: query.status } : {}),
+    };
 
     const [rows, total] = await Promise.all([
       this.prisma.linePayment.findMany({

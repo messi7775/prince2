@@ -17,9 +17,9 @@
     },
     {
       "name": "ADMIN_PASSWORD",
-      "description": "Admin login password for ibrabra651@gmail.com (min 12 chars). Internal, not an external credential.",
+      "description": "Admin login password for admin@prince-net.local (min 12 chars). Internal, not an external credential.",
       "requiredAtBoot": true,
-      "generatedForDevelopment": false
+      "generatedForDevelopment": true
     }
   ]
 }

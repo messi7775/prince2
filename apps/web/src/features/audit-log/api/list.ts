@@ -11,6 +11,8 @@ interface ListParams extends PaginationQuery {
     search?: string;
     action?: AuditAction;
     entityType?: string;
+    entityId?: string;
+    userId?: string;
     dateFrom?: string;
     dateTo?: string;
 }
@@ -25,6 +27,8 @@ export async function listAuditLogs(
             limit: params.limit,
             action: params.action,
             entityType: params.entityType,
+            entityId: params.entityId,
+            userId: params.userId,
             dateFrom: params.dateFrom,
             dateTo: endOfDay(params.dateTo),
         },

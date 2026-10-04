@@ -12,6 +12,7 @@ import {
 import { ThemeToggle } from './ThemeToggle';
 import { Breadcrumbs } from '../navigation/Breadcrumbs';
 import { useAuth } from '../../features/auth/hooks/useAuth';
+import { NotificationCenter } from '../../features/notifications/components/NotificationCenter';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -46,6 +47,7 @@ export function Header({ onMenuClick }: HeaderProps) {
 
         {/* End: Theme + User */}
         <div className="flex items-center gap-2 shrink-0">
+          <NotificationCenter />
           <ThemeToggle />
 
           <DropdownMenu>
@@ -61,7 +63,7 @@ export function Header({ onMenuClick }: HeaderProps) {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium">
+                  <span dir="ltr" className="text-sm font-medium ltr">
                     {user?.email ?? 'مستخدم'}
                   </span>
                 </div>

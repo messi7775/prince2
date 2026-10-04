@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, Printer, Trash2, Wallet } from 'lucide-react';
+import { MoreHorizontal, Pencil, Printer, RotateCcw, Share2, Wallet } from 'lucide-react';
 import type { OwnerWithdrawal } from '@prince-net/types';
 import {
   Table,
@@ -23,15 +23,17 @@ import { formatDate } from '../../../lib/format';
 interface OwnerWithdrawalsTableProps {
   data: OwnerWithdrawal[];
   onEdit: (withdrawal: OwnerWithdrawal) => void;
-  onDelete: (withdrawal: OwnerWithdrawal) => void;
+  onReverse: (withdrawal: OwnerWithdrawal) => void;
   onPrint: (withdrawal: OwnerWithdrawal) => void;
+  onSharePdf: (withdrawal: OwnerWithdrawal) => void;
 }
 
 export function OwnerWithdrawalsTable({
   data,
   onEdit,
-  onDelete,
+  onReverse,
   onPrint,
+  onSharePdf,
 }: OwnerWithdrawalsTableProps) {
   if (data.length === 0) {
     return (
@@ -91,6 +93,10 @@ export function OwnerWithdrawalsTable({
                         <Printer className="me-2 h-4 w-4" />
                         طباعة
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onSharePdf(w)}>
+                        <Share2 className="me-2 h-4 w-4" />
+                        مشاركة PDF
+                      </DropdownMenuItem>
                       {isActive && (
                         <DropdownMenuItem onClick={() => onEdit(w)}>
                           <Pencil className="me-2 h-4 w-4" />
@@ -100,10 +106,10 @@ export function OwnerWithdrawalsTable({
                       {isActive && (
                         <DropdownMenuItem
                           className="text-destructive"
-                          onClick={() => onDelete(w)}
+                          onClick={() => onReverse(w)}
                         >
-                          <Trash2 className="me-2 h-4 w-4" />
-                          حذف
+                          <RotateCcw className="me-2 h-4 w-4" />
+                          عكس
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>
