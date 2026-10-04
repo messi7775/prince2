@@ -18,6 +18,8 @@ interface ExpensesFiltersProps {
   onDateFromChange: (value: string) => void;
   dateTo: string;
   onDateToChange: (value: string) => void;
+  order: 'asc' | 'desc';
+  onOrderChange: (value: 'asc' | 'desc') => void;
 }
 
 export function ExpensesFilters({
@@ -29,12 +31,14 @@ export function ExpensesFilters({
   onDateFromChange,
   dateTo,
   onDateToChange,
+  order,
+  onOrderChange,
 }: ExpensesFiltersProps) {
   const categoriesQuery = useExpenseCategories();
   const categories = categoriesQuery.data ?? [];
 
   return (
-    <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
       <div className="space-y-1">
         <Label className="text-xs">التصنيف</Label>
         <Select
@@ -93,6 +97,22 @@ export function ExpensesFilters({
           value={dateTo}
           onChange={onDateToChange}
         />
+      </div>
+
+      <div className="space-y-1">
+        <Label className="text-xs">الترتيب</Label>
+        <Select
+          value={order}
+          onValueChange={(v) => onOrderChange(v as 'asc' | 'desc')}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="desc">الأحدث أولاً</SelectItem>
+            <SelectItem value="asc">الأقدم أولاً</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

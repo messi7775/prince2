@@ -9,6 +9,7 @@ interface ListLinePaymentsParams {
   page?: number;
   limit?: number;
   order?: 'asc' | 'desc';
+  status?: 'ACTIVE' | 'REVERSED';
 }
 
 export async function listLinePaymentsByLine(
@@ -21,6 +22,7 @@ export async function listLinePaymentsByLine(
         page: params.page,
         limit: params.limit,
         order: params.order,
+        status: params.status,
       },
     },
   );

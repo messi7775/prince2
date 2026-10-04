@@ -35,6 +35,7 @@ export function ExpensesPage() {
   const [status, setStatus] = useState<StatusFilter>('ALL');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [order, setOrder] = useState<'asc' | 'desc'>('desc');
 
   const [formOpen, setFormOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -50,6 +51,7 @@ export function ExpensesPage() {
     status: status === 'ALL' ? undefined : status,
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
+    order,
   });
 
   const createMutation = useCreateExpense();
@@ -160,6 +162,11 @@ export function ExpensesPage() {
         dateTo={dateTo}
         onDateToChange={(v) => {
           setDateTo(v);
+          setPage(1);
+        }}
+        order={order}
+        onOrderChange={(v) => {
+          setOrder(v);
           setPage(1);
         }}
       />

@@ -32,7 +32,7 @@ export class PaymentsService {
   // ───────────────────────────────────────────────────────────
   async listBySale(
     saleId: string,
-    query: PaginationInput,
+    query: PaginationInput & { status?: 'ACTIVE' | 'REVERSED' },
   ): Promise<PaginatedResponse<Payment>> {
     const sale = await this.prisma.sale.findUnique({
       where: { id: saleId },
@@ -46,7 +46,10 @@ export class PaymentsService {
     }
 
     const { page, limit, skip, take, order } = normalizePagination(query);
-    const where = { saleId };
+    const where = {
+      saleId,
+      ...(query.status ? { status: query.status } : {}),
+    };
 
     const [rows, total] = await Promise.all([
       this.prisma.payment.findMany({

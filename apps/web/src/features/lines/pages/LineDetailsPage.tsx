@@ -25,6 +25,11 @@ import {
 import { LineFormDialog } from '../components/LineFormDialog';
 import { useLinePayments } from '../../line-payments/hooks/useLinePayments';
 import { LinePaymentsTable } from '../../line-payments/components/LinePaymentsTable';
+import {
+  PaymentsListFilters,
+  type PaymentStatusFilter,
+  type PaymentOrder,
+} from '../../payments/components/PaymentsListFilters';
 import { CreateLinePaymentDialog } from '../../line-payments/components/CreateLinePaymentDialog';
 import { ReverseLinePaymentDialog } from '../../line-payments/components/ReverseLinePaymentDialog';
 import { formatMoney } from '../../../lib/currency';
@@ -41,6 +46,9 @@ export function LineDetailsPage() {
   const { toast } = useToast();
   const { shareReceipt } = useSharePdf();
   const [isSharingPdf, setIsSharingPdf] = useState(false);
+  const [paymentsStatus, setPaymentsStatus] =
+    useState<PaymentStatusFilter>('ALL');
+  const [paymentsOrder, setPaymentsOrder] = useState<PaymentOrder>('desc');
 
   const [editOpen, setEditOpen] = useState(false);
   const [toggleTarget, setToggleTarget] = useState<boolean | null>(null);
@@ -59,7 +67,8 @@ export function LineDetailsPage() {
     lineId: id,
     page: paymentsPage,
     limit: PAYMENTS_LIMIT,
-    order: 'desc',
+    order: paymentsOrder,
+    status: paymentsStatus === 'ALL' ? undefined : paymentsStatus,
   });
 
   if (lineQuery.isLoading) {
@@ -330,13 +339,27 @@ export function LineDetailsPage() {
               onRetry={() => paymentsQuery.refetch()}
             />
           ) : (
-            <LinePaymentsTable
-              data={paymentsQuery.data?.data ?? []}
-              page={paymentsPage}
-              totalPages={paymentsQuery.data?.meta.totalPages ?? 0}
-              onPageChange={setPaymentsPage}
-              onReverse={setReversePaymentTarget}
-            />
+            <>
+              <PaymentsListFilters
+                status={paymentsStatus}
+                onStatusChange={(v) => {
+                  setPaymentsStatus(v);
+                  setPaymentsPage(1);
+                }}
+                order={paymentsOrder}
+                onOrderChange={(v) => {
+                  setPaymentsOrder(v);
+                  setPaymentsPage(1);
+                }}
+              />
+              <LinePaymentsTable
+                data={paymentsQuery.data?.data ?? []}
+                page={paymentsPage}
+                totalPages={paymentsQuery.data?.meta.totalPages ?? 0}
+                onPageChange={setPaymentsPage}
+                onReverse={setReversePaymentTarget}
+              />
+            </>
           )}
         </CardContent>
       </Card>

@@ -27,6 +27,10 @@ import { PaymentsService } from './payments.service';
 
 type AuthUser = { userId: string; email: string };
 
+interface ListQuery extends PaginationInput {
+  status?: 'ACTIVE' | 'REVERSED';
+}
+
 @Controller()
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
@@ -35,8 +39,13 @@ export class PaymentsController {
   async listBySale(
     @Param('saleId') saleId: string,
     @Query(new ZodValidationPipe(paginationSchema)) query: PaginationInput,
+    @Query('status') status?: string,
   ) {
-    return this.paymentsService.listBySale(saleId, query);
+    const normalized: ListQuery = {
+      ...query,
+      ...(status === 'ACTIVE' || status === 'REVERSED' ? { status } : {}),
+    };
+    return this.paymentsService.listBySale(saleId, normalized);
   }
 
   @Post('sales/:saleId/payments')

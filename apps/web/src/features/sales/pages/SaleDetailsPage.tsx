@@ -42,6 +42,11 @@ import { EditSaleDialog } from '../components/EditSaleDialog';
 import { usePayments } from '../../payments/hooks/usePayments';
 import { useUpdatePayment } from '../../payments/hooks/useUpdatePayment';
 import { PaymentsTable } from '../../payments/components/PaymentsTable';
+import {
+    PaymentsListFilters,
+    type PaymentStatusFilter,
+    type PaymentOrder,
+} from '../../payments/components/PaymentsListFilters';
 import { CreatePaymentDialog } from '../../payments/components/CreatePaymentDialog';
 import { EditPaymentDialog } from '../../payments/components/EditPaymentDialog';
 import { ReversePaymentDialog } from '../../payments/components/ReversePaymentDialog';
@@ -67,6 +72,10 @@ export function SaleDetailsPage() {
         useState<Payment | null>(null);
     const [reversePaymentTarget, setReversePaymentTarget] =
         useState<Payment | null>(null);
+    const [paymentsStatus, setPaymentsStatus] =
+        useState<PaymentStatusFilter>('ALL');
+    const [paymentsOrder, setPaymentsOrder] =
+        useState<PaymentOrder>('desc');
 
     const saleQuery = useSale(id);
     const cancelMutation = useCancelSale();
@@ -76,7 +85,8 @@ export function SaleDetailsPage() {
         saleId: id,
         page: paymentsPage,
         limit: PAYMENTS_LIMIT,
-        order: 'desc',
+        order: paymentsOrder,
+        status: paymentsStatus === 'ALL' ? undefined : paymentsStatus,
     });
 
     if (saleQuery.isLoading) {
@@ -370,14 +380,28 @@ variant = { hasRemaining? 'destructive': 'default' }
         }
         />
           ) : (
-    <PaymentsTable
-              data= { paymentsQuery.data?.data ?? [] }
-page = { paymentsPage }
-totalPages = { paymentsQuery.data?.meta.totalPages ?? 0 }
-onPageChange = { setPaymentsPage }
-onEdit = { setEditPaymentTarget }
-onReverse = { setReversePaymentTarget }
-    />
+              <>
+                  <PaymentsListFilters
+                      status={paymentsStatus}
+                      onStatusChange={(v) => {
+                          setPaymentsStatus(v);
+                          setPaymentsPage(1);
+                      }}
+                      order={paymentsOrder}
+                      onOrderChange={(v) => {
+                          setPaymentsOrder(v);
+                          setPaymentsPage(1);
+                      }}
+                  />
+                  <PaymentsTable
+                      data={paymentsQuery.data?.data ?? []}
+                      page={paymentsPage}
+                      totalPages={paymentsQuery.data?.meta.totalPages ?? 0}
+                      onPageChange={setPaymentsPage}
+                      onEdit={setEditPaymentTarget}
+                      onReverse={setReversePaymentTarget}
+                  />
+              </>
           )}
 </CardContent>
     </Card>
