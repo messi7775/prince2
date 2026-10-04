@@ -84,6 +84,11 @@ export type OwnerWithdrawal = $Result.DefaultSelection<Prisma.$OwnerWithdrawalPa
  */
 export type CashMovement = $Result.DefaultSelection<Prisma.$CashMovementPayload>
 /**
+ * Model CashClosing
+ * 
+ */
+export type CashClosing = $Result.DefaultSelection<Prisma.$CashClosingPayload>
+/**
  * Model AuditLog
  * 
  */
@@ -230,6 +235,7 @@ export const AuditAction: {
   OWNER_WITHDRAWAL_REVERSED: 'OWNER_WITHDRAWAL_REVERSED',
   CASH_MANUAL_IN: 'CASH_MANUAL_IN',
   CASH_MANUAL_OUT: 'CASH_MANUAL_OUT',
+  CASH_CLOSING_CREATED: 'CASH_CLOSING_CREATED',
   BACKUP_CREATED: 'BACKUP_CREATED',
   BACKUP_RESTORED: 'BACKUP_RESTORED',
   BACKUP_EXPORTED: 'BACKUP_EXPORTED',
@@ -540,6 +546,16 @@ export class PrismaClient<
     * ```
     */
   get cashMovement(): Prisma.CashMovementDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.cashClosing`: Exposes CRUD operations for the **CashClosing** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CashClosings
+    * const cashClosings = await prisma.cashClosing.findMany()
+    * ```
+    */
+  get cashClosing(): Prisma.CashClosingDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.auditLog`: Exposes CRUD operations for the **AuditLog** model.
@@ -1025,6 +1041,7 @@ export namespace Prisma {
     Expense: 'Expense',
     OwnerWithdrawal: 'OwnerWithdrawal',
     CashMovement: 'CashMovement',
+    CashClosing: 'CashClosing',
     AuditLog: 'AuditLog',
     Backup: 'Backup',
     Settings: 'Settings'
@@ -1046,7 +1063,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "package" | "packageStock" | "inventoryMovement" | "distributor" | "sale" | "saleItem" | "payment" | "line" | "linePayment" | "expenseCategory" | "expense" | "ownerWithdrawal" | "cashMovement" | "auditLog" | "backup" | "settings"
+      modelProps: "user" | "package" | "packageStock" | "inventoryMovement" | "distributor" | "sale" | "saleItem" | "payment" | "line" | "linePayment" | "expenseCategory" | "expense" | "ownerWithdrawal" | "cashMovement" | "cashClosing" | "auditLog" | "backup" | "settings"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2086,6 +2103,80 @@ export namespace Prisma {
           }
         }
       }
+      CashClosing: {
+        payload: Prisma.$CashClosingPayload<ExtArgs>
+        fields: Prisma.CashClosingFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CashClosingFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CashClosingPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CashClosingFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CashClosingPayload>
+          }
+          findFirst: {
+            args: Prisma.CashClosingFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CashClosingPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CashClosingFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CashClosingPayload>
+          }
+          findMany: {
+            args: Prisma.CashClosingFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CashClosingPayload>[]
+          }
+          create: {
+            args: Prisma.CashClosingCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CashClosingPayload>
+          }
+          createMany: {
+            args: Prisma.CashClosingCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CashClosingCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CashClosingPayload>[]
+          }
+          delete: {
+            args: Prisma.CashClosingDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CashClosingPayload>
+          }
+          update: {
+            args: Prisma.CashClosingUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CashClosingPayload>
+          }
+          deleteMany: {
+            args: Prisma.CashClosingDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CashClosingUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.CashClosingUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CashClosingPayload>[]
+          }
+          upsert: {
+            args: Prisma.CashClosingUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CashClosingPayload>
+          }
+          aggregate: {
+            args: Prisma.CashClosingAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCashClosing>
+          }
+          groupBy: {
+            args: Prisma.CashClosingGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CashClosingGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CashClosingCountArgs<ExtArgs>
+            result: $Utils.Optional<CashClosingCountAggregateOutputType> | number
+          }
+        }
+      }
       AuditLog: {
         payload: Prisma.$AuditLogPayload<ExtArgs>
         fields: Prisma.AuditLogFieldRefs
@@ -2418,6 +2509,7 @@ export namespace Prisma {
     expense?: ExpenseOmit
     ownerWithdrawal?: OwnerWithdrawalOmit
     cashMovement?: CashMovementOmit
+    cashClosing?: CashClosingOmit
     auditLog?: AuditLogOmit
     backup?: BackupOmit
     settings?: SettingsOmit
@@ -2514,6 +2606,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated: number
     ownerWithdrawalsReversed: number
     cashMovements: number
+    cashClosings: number
     auditLogs: number
     backups: number
   }
@@ -2532,6 +2625,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: boolean | UserCountOutputTypeCountOwnerWithdrawalsCreatedArgs
     ownerWithdrawalsReversed?: boolean | UserCountOutputTypeCountOwnerWithdrawalsReversedArgs
     cashMovements?: boolean | UserCountOutputTypeCountCashMovementsArgs
+    cashClosings?: boolean | UserCountOutputTypeCountCashClosingsArgs
     auditLogs?: boolean | UserCountOutputTypeCountAuditLogsArgs
     backups?: boolean | UserCountOutputTypeCountBackupsArgs
   }
@@ -2636,6 +2730,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountCashMovementsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: CashMovementWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountCashClosingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CashClosingWhereInput
   }
 
   /**
@@ -3080,6 +3181,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: boolean | User$ownerWithdrawalsCreatedArgs<ExtArgs>
     ownerWithdrawalsReversed?: boolean | User$ownerWithdrawalsReversedArgs<ExtArgs>
     cashMovements?: boolean | User$cashMovementsArgs<ExtArgs>
+    cashClosings?: boolean | User$cashClosingsArgs<ExtArgs>
     auditLogs?: boolean | User$auditLogsArgs<ExtArgs>
     backups?: boolean | User$backupsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -3127,6 +3229,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: boolean | User$ownerWithdrawalsCreatedArgs<ExtArgs>
     ownerWithdrawalsReversed?: boolean | User$ownerWithdrawalsReversedArgs<ExtArgs>
     cashMovements?: boolean | User$cashMovementsArgs<ExtArgs>
+    cashClosings?: boolean | User$cashClosingsArgs<ExtArgs>
     auditLogs?: boolean | User$auditLogsArgs<ExtArgs>
     backups?: boolean | User$backupsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -3150,6 +3253,7 @@ export namespace Prisma {
       ownerWithdrawalsCreated: Prisma.$OwnerWithdrawalPayload<ExtArgs>[]
       ownerWithdrawalsReversed: Prisma.$OwnerWithdrawalPayload<ExtArgs>[]
       cashMovements: Prisma.$CashMovementPayload<ExtArgs>[]
+      cashClosings: Prisma.$CashClosingPayload<ExtArgs>[]
       auditLogs: Prisma.$AuditLogPayload<ExtArgs>[]
       backups: Prisma.$BackupPayload<ExtArgs>[]
     }
@@ -3567,6 +3671,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated<T extends User$ownerWithdrawalsCreatedArgs<ExtArgs> = {}>(args?: Subset<T, User$ownerWithdrawalsCreatedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OwnerWithdrawalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     ownerWithdrawalsReversed<T extends User$ownerWithdrawalsReversedArgs<ExtArgs> = {}>(args?: Subset<T, User$ownerWithdrawalsReversedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OwnerWithdrawalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     cashMovements<T extends User$cashMovementsArgs<ExtArgs> = {}>(args?: Subset<T, User$cashMovementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CashMovementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    cashClosings<T extends User$cashClosingsArgs<ExtArgs> = {}>(args?: Subset<T, User$cashClosingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CashClosingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     auditLogs<T extends User$auditLogsArgs<ExtArgs> = {}>(args?: Subset<T, User$auditLogsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     backups<T extends User$backupsArgs<ExtArgs> = {}>(args?: Subset<T, User$backupsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BackupPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
@@ -4301,6 +4406,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: CashMovementScalarFieldEnum | CashMovementScalarFieldEnum[]
+  }
+
+  /**
+   * User.cashClosings
+   */
+  export type User$cashClosingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CashClosing
+     */
+    select?: CashClosingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CashClosing
+     */
+    omit?: CashClosingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CashClosingInclude<ExtArgs> | null
+    where?: CashClosingWhereInput
+    orderBy?: CashClosingOrderByWithRelationInput | CashClosingOrderByWithRelationInput[]
+    cursor?: CashClosingWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CashClosingScalarFieldEnum | CashClosingScalarFieldEnum[]
   }
 
   /**
@@ -19732,6 +19861,1213 @@ export namespace Prisma {
 
 
   /**
+   * Model CashClosing
+   */
+
+  export type AggregateCashClosing = {
+    _count: CashClosingCountAggregateOutputType | null
+    _avg: CashClosingAvgAggregateOutputType | null
+    _sum: CashClosingSumAggregateOutputType | null
+    _min: CashClosingMinAggregateOutputType | null
+    _max: CashClosingMaxAggregateOutputType | null
+  }
+
+  export type CashClosingAvgAggregateOutputType = {
+    openingBalance: Decimal | null
+    totalIn: Decimal | null
+    totalOut: Decimal | null
+    ownerWithdrawals: Decimal | null
+    expectedBalance: Decimal | null
+    actualBalance: Decimal | null
+    difference: Decimal | null
+  }
+
+  export type CashClosingSumAggregateOutputType = {
+    openingBalance: Decimal | null
+    totalIn: Decimal | null
+    totalOut: Decimal | null
+    ownerWithdrawals: Decimal | null
+    expectedBalance: Decimal | null
+    actualBalance: Decimal | null
+    difference: Decimal | null
+  }
+
+  export type CashClosingMinAggregateOutputType = {
+    id: string | null
+    closingDate: Date | null
+    openingBalance: Decimal | null
+    totalIn: Decimal | null
+    totalOut: Decimal | null
+    ownerWithdrawals: Decimal | null
+    expectedBalance: Decimal | null
+    actualBalance: Decimal | null
+    difference: Decimal | null
+    notes: string | null
+    closedBy: string | null
+    closedAt: Date | null
+  }
+
+  export type CashClosingMaxAggregateOutputType = {
+    id: string | null
+    closingDate: Date | null
+    openingBalance: Decimal | null
+    totalIn: Decimal | null
+    totalOut: Decimal | null
+    ownerWithdrawals: Decimal | null
+    expectedBalance: Decimal | null
+    actualBalance: Decimal | null
+    difference: Decimal | null
+    notes: string | null
+    closedBy: string | null
+    closedAt: Date | null
+  }
+
+  export type CashClosingCountAggregateOutputType = {
+    id: number
+    closingDate: number
+    openingBalance: number
+    totalIn: number
+    totalOut: number
+    ownerWithdrawals: number
+    expectedBalance: number
+    actualBalance: number
+    difference: number
+    notes: number
+    closedBy: number
+    closedAt: number
+    _all: number
+  }
+
+
+  export type CashClosingAvgAggregateInputType = {
+    openingBalance?: true
+    totalIn?: true
+    totalOut?: true
+    ownerWithdrawals?: true
+    expectedBalance?: true
+    actualBalance?: true
+    difference?: true
+  }
+
+  export type CashClosingSumAggregateInputType = {
+    openingBalance?: true
+    totalIn?: true
+    totalOut?: true
+    ownerWithdrawals?: true
+    expectedBalance?: true
+    actualBalance?: true
+    difference?: true
+  }
+
+  export type CashClosingMinAggregateInputType = {
+    id?: true
+    closingDate?: true
+    openingBalance?: true
+    totalIn?: true
+    totalOut?: true
+    ownerWithdrawals?: true
+    expectedBalance?: true
+    actualBalance?: true
+    difference?: true
+    notes?: true
+    closedBy?: true
+    closedAt?: true
+  }
+
+  export type CashClosingMaxAggregateInputType = {
+    id?: true
+    closingDate?: true
+    openingBalance?: true
+    totalIn?: true
+    totalOut?: true
+    ownerWithdrawals?: true
+    expectedBalance?: true
+    actualBalance?: true
+    difference?: true
+    notes?: true
+    closedBy?: true
+    closedAt?: true
+  }
+
+  export type CashClosingCountAggregateInputType = {
+    id?: true
+    closingDate?: true
+    openingBalance?: true
+    totalIn?: true
+    totalOut?: true
+    ownerWithdrawals?: true
+    expectedBalance?: true
+    actualBalance?: true
+    difference?: true
+    notes?: true
+    closedBy?: true
+    closedAt?: true
+    _all?: true
+  }
+
+  export type CashClosingAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CashClosing to aggregate.
+     */
+    where?: CashClosingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CashClosings to fetch.
+     */
+    orderBy?: CashClosingOrderByWithRelationInput | CashClosingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CashClosingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CashClosings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CashClosings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned CashClosings
+    **/
+    _count?: true | CashClosingCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: CashClosingAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: CashClosingSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CashClosingMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CashClosingMaxAggregateInputType
+  }
+
+  export type GetCashClosingAggregateType<T extends CashClosingAggregateArgs> = {
+        [P in keyof T & keyof AggregateCashClosing]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCashClosing[P]>
+      : GetScalarType<T[P], AggregateCashClosing[P]>
+  }
+
+
+
+
+  export type CashClosingGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CashClosingWhereInput
+    orderBy?: CashClosingOrderByWithAggregationInput | CashClosingOrderByWithAggregationInput[]
+    by: CashClosingScalarFieldEnum[] | CashClosingScalarFieldEnum
+    having?: CashClosingScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CashClosingCountAggregateInputType | true
+    _avg?: CashClosingAvgAggregateInputType
+    _sum?: CashClosingSumAggregateInputType
+    _min?: CashClosingMinAggregateInputType
+    _max?: CashClosingMaxAggregateInputType
+  }
+
+  export type CashClosingGroupByOutputType = {
+    id: string
+    closingDate: Date
+    openingBalance: Decimal
+    totalIn: Decimal
+    totalOut: Decimal
+    ownerWithdrawals: Decimal
+    expectedBalance: Decimal
+    actualBalance: Decimal
+    difference: Decimal
+    notes: string | null
+    closedBy: string
+    closedAt: Date
+    _count: CashClosingCountAggregateOutputType | null
+    _avg: CashClosingAvgAggregateOutputType | null
+    _sum: CashClosingSumAggregateOutputType | null
+    _min: CashClosingMinAggregateOutputType | null
+    _max: CashClosingMaxAggregateOutputType | null
+  }
+
+  type GetCashClosingGroupByPayload<T extends CashClosingGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CashClosingGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CashClosingGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CashClosingGroupByOutputType[P]>
+            : GetScalarType<T[P], CashClosingGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CashClosingSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    closingDate?: boolean
+    openingBalance?: boolean
+    totalIn?: boolean
+    totalOut?: boolean
+    ownerWithdrawals?: boolean
+    expectedBalance?: boolean
+    actualBalance?: boolean
+    difference?: boolean
+    notes?: boolean
+    closedBy?: boolean
+    closedAt?: boolean
+    closedByUser?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["cashClosing"]>
+
+  export type CashClosingSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    closingDate?: boolean
+    openingBalance?: boolean
+    totalIn?: boolean
+    totalOut?: boolean
+    ownerWithdrawals?: boolean
+    expectedBalance?: boolean
+    actualBalance?: boolean
+    difference?: boolean
+    notes?: boolean
+    closedBy?: boolean
+    closedAt?: boolean
+    closedByUser?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["cashClosing"]>
+
+  export type CashClosingSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    closingDate?: boolean
+    openingBalance?: boolean
+    totalIn?: boolean
+    totalOut?: boolean
+    ownerWithdrawals?: boolean
+    expectedBalance?: boolean
+    actualBalance?: boolean
+    difference?: boolean
+    notes?: boolean
+    closedBy?: boolean
+    closedAt?: boolean
+    closedByUser?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["cashClosing"]>
+
+  export type CashClosingSelectScalar = {
+    id?: boolean
+    closingDate?: boolean
+    openingBalance?: boolean
+    totalIn?: boolean
+    totalOut?: boolean
+    ownerWithdrawals?: boolean
+    expectedBalance?: boolean
+    actualBalance?: boolean
+    difference?: boolean
+    notes?: boolean
+    closedBy?: boolean
+    closedAt?: boolean
+  }
+
+  export type CashClosingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "closingDate" | "openingBalance" | "totalIn" | "totalOut" | "ownerWithdrawals" | "expectedBalance" | "actualBalance" | "difference" | "notes" | "closedBy" | "closedAt", ExtArgs["result"]["cashClosing"]>
+  export type CashClosingInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    closedByUser?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type CashClosingIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    closedByUser?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type CashClosingIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    closedByUser?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $CashClosingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "CashClosing"
+    objects: {
+      closedByUser: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      closingDate: Date
+      openingBalance: Prisma.Decimal
+      totalIn: Prisma.Decimal
+      totalOut: Prisma.Decimal
+      ownerWithdrawals: Prisma.Decimal
+      expectedBalance: Prisma.Decimal
+      actualBalance: Prisma.Decimal
+      difference: Prisma.Decimal
+      notes: string | null
+      closedBy: string
+      closedAt: Date
+    }, ExtArgs["result"]["cashClosing"]>
+    composites: {}
+  }
+
+  type CashClosingGetPayload<S extends boolean | null | undefined | CashClosingDefaultArgs> = $Result.GetResult<Prisma.$CashClosingPayload, S>
+
+  type CashClosingCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<CashClosingFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: CashClosingCountAggregateInputType | true
+    }
+
+  export interface CashClosingDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['CashClosing'], meta: { name: 'CashClosing' } }
+    /**
+     * Find zero or one CashClosing that matches the filter.
+     * @param {CashClosingFindUniqueArgs} args - Arguments to find a CashClosing
+     * @example
+     * // Get one CashClosing
+     * const cashClosing = await prisma.cashClosing.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CashClosingFindUniqueArgs>(args: SelectSubset<T, CashClosingFindUniqueArgs<ExtArgs>>): Prisma__CashClosingClient<$Result.GetResult<Prisma.$CashClosingPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one CashClosing that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {CashClosingFindUniqueOrThrowArgs} args - Arguments to find a CashClosing
+     * @example
+     * // Get one CashClosing
+     * const cashClosing = await prisma.cashClosing.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CashClosingFindUniqueOrThrowArgs>(args: SelectSubset<T, CashClosingFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CashClosingClient<$Result.GetResult<Prisma.$CashClosingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CashClosing that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CashClosingFindFirstArgs} args - Arguments to find a CashClosing
+     * @example
+     * // Get one CashClosing
+     * const cashClosing = await prisma.cashClosing.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CashClosingFindFirstArgs>(args?: SelectSubset<T, CashClosingFindFirstArgs<ExtArgs>>): Prisma__CashClosingClient<$Result.GetResult<Prisma.$CashClosingPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CashClosing that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CashClosingFindFirstOrThrowArgs} args - Arguments to find a CashClosing
+     * @example
+     * // Get one CashClosing
+     * const cashClosing = await prisma.cashClosing.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CashClosingFindFirstOrThrowArgs>(args?: SelectSubset<T, CashClosingFindFirstOrThrowArgs<ExtArgs>>): Prisma__CashClosingClient<$Result.GetResult<Prisma.$CashClosingPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more CashClosings that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CashClosingFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all CashClosings
+     * const cashClosings = await prisma.cashClosing.findMany()
+     * 
+     * // Get first 10 CashClosings
+     * const cashClosings = await prisma.cashClosing.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const cashClosingWithIdOnly = await prisma.cashClosing.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CashClosingFindManyArgs>(args?: SelectSubset<T, CashClosingFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CashClosingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a CashClosing.
+     * @param {CashClosingCreateArgs} args - Arguments to create a CashClosing.
+     * @example
+     * // Create one CashClosing
+     * const CashClosing = await prisma.cashClosing.create({
+     *   data: {
+     *     // ... data to create a CashClosing
+     *   }
+     * })
+     * 
+     */
+    create<T extends CashClosingCreateArgs>(args: SelectSubset<T, CashClosingCreateArgs<ExtArgs>>): Prisma__CashClosingClient<$Result.GetResult<Prisma.$CashClosingPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many CashClosings.
+     * @param {CashClosingCreateManyArgs} args - Arguments to create many CashClosings.
+     * @example
+     * // Create many CashClosings
+     * const cashClosing = await prisma.cashClosing.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CashClosingCreateManyArgs>(args?: SelectSubset<T, CashClosingCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many CashClosings and returns the data saved in the database.
+     * @param {CashClosingCreateManyAndReturnArgs} args - Arguments to create many CashClosings.
+     * @example
+     * // Create many CashClosings
+     * const cashClosing = await prisma.cashClosing.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many CashClosings and only return the `id`
+     * const cashClosingWithIdOnly = await prisma.cashClosing.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CashClosingCreateManyAndReturnArgs>(args?: SelectSubset<T, CashClosingCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CashClosingPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a CashClosing.
+     * @param {CashClosingDeleteArgs} args - Arguments to delete one CashClosing.
+     * @example
+     * // Delete one CashClosing
+     * const CashClosing = await prisma.cashClosing.delete({
+     *   where: {
+     *     // ... filter to delete one CashClosing
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CashClosingDeleteArgs>(args: SelectSubset<T, CashClosingDeleteArgs<ExtArgs>>): Prisma__CashClosingClient<$Result.GetResult<Prisma.$CashClosingPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one CashClosing.
+     * @param {CashClosingUpdateArgs} args - Arguments to update one CashClosing.
+     * @example
+     * // Update one CashClosing
+     * const cashClosing = await prisma.cashClosing.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CashClosingUpdateArgs>(args: SelectSubset<T, CashClosingUpdateArgs<ExtArgs>>): Prisma__CashClosingClient<$Result.GetResult<Prisma.$CashClosingPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more CashClosings.
+     * @param {CashClosingDeleteManyArgs} args - Arguments to filter CashClosings to delete.
+     * @example
+     * // Delete a few CashClosings
+     * const { count } = await prisma.cashClosing.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CashClosingDeleteManyArgs>(args?: SelectSubset<T, CashClosingDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CashClosings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CashClosingUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many CashClosings
+     * const cashClosing = await prisma.cashClosing.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CashClosingUpdateManyArgs>(args: SelectSubset<T, CashClosingUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CashClosings and returns the data updated in the database.
+     * @param {CashClosingUpdateManyAndReturnArgs} args - Arguments to update many CashClosings.
+     * @example
+     * // Update many CashClosings
+     * const cashClosing = await prisma.cashClosing.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more CashClosings and only return the `id`
+     * const cashClosingWithIdOnly = await prisma.cashClosing.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends CashClosingUpdateManyAndReturnArgs>(args: SelectSubset<T, CashClosingUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CashClosingPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one CashClosing.
+     * @param {CashClosingUpsertArgs} args - Arguments to update or create a CashClosing.
+     * @example
+     * // Update or create a CashClosing
+     * const cashClosing = await prisma.cashClosing.upsert({
+     *   create: {
+     *     // ... data to create a CashClosing
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the CashClosing we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CashClosingUpsertArgs>(args: SelectSubset<T, CashClosingUpsertArgs<ExtArgs>>): Prisma__CashClosingClient<$Result.GetResult<Prisma.$CashClosingPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of CashClosings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CashClosingCountArgs} args - Arguments to filter CashClosings to count.
+     * @example
+     * // Count the number of CashClosings
+     * const count = await prisma.cashClosing.count({
+     *   where: {
+     *     // ... the filter for the CashClosings we want to count
+     *   }
+     * })
+    **/
+    count<T extends CashClosingCountArgs>(
+      args?: Subset<T, CashClosingCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CashClosingCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a CashClosing.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CashClosingAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CashClosingAggregateArgs>(args: Subset<T, CashClosingAggregateArgs>): Prisma.PrismaPromise<GetCashClosingAggregateType<T>>
+
+    /**
+     * Group by CashClosing.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CashClosingGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CashClosingGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CashClosingGroupByArgs['orderBy'] }
+        : { orderBy?: CashClosingGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CashClosingGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCashClosingGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the CashClosing model
+   */
+  readonly fields: CashClosingFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for CashClosing.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CashClosingClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    closedByUser<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the CashClosing model
+   */
+  interface CashClosingFieldRefs {
+    readonly id: FieldRef<"CashClosing", 'String'>
+    readonly closingDate: FieldRef<"CashClosing", 'DateTime'>
+    readonly openingBalance: FieldRef<"CashClosing", 'Decimal'>
+    readonly totalIn: FieldRef<"CashClosing", 'Decimal'>
+    readonly totalOut: FieldRef<"CashClosing", 'Decimal'>
+    readonly ownerWithdrawals: FieldRef<"CashClosing", 'Decimal'>
+    readonly expectedBalance: FieldRef<"CashClosing", 'Decimal'>
+    readonly actualBalance: FieldRef<"CashClosing", 'Decimal'>
+    readonly difference: FieldRef<"CashClosing", 'Decimal'>
+    readonly notes: FieldRef<"CashClosing", 'String'>
+    readonly closedBy: FieldRef<"CashClosing", 'String'>
+    readonly closedAt: FieldRef<"CashClosing", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * CashClosing findUnique
+   */
+  export type CashClosingFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CashClosing
+     */
+    select?: CashClosingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CashClosing
+     */
+    omit?: CashClosingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CashClosingInclude<ExtArgs> | null
+    /**
+     * Filter, which CashClosing to fetch.
+     */
+    where: CashClosingWhereUniqueInput
+  }
+
+  /**
+   * CashClosing findUniqueOrThrow
+   */
+  export type CashClosingFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CashClosing
+     */
+    select?: CashClosingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CashClosing
+     */
+    omit?: CashClosingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CashClosingInclude<ExtArgs> | null
+    /**
+     * Filter, which CashClosing to fetch.
+     */
+    where: CashClosingWhereUniqueInput
+  }
+
+  /**
+   * CashClosing findFirst
+   */
+  export type CashClosingFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CashClosing
+     */
+    select?: CashClosingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CashClosing
+     */
+    omit?: CashClosingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CashClosingInclude<ExtArgs> | null
+    /**
+     * Filter, which CashClosing to fetch.
+     */
+    where?: CashClosingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CashClosings to fetch.
+     */
+    orderBy?: CashClosingOrderByWithRelationInput | CashClosingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CashClosings.
+     */
+    cursor?: CashClosingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CashClosings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CashClosings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CashClosings.
+     */
+    distinct?: CashClosingScalarFieldEnum | CashClosingScalarFieldEnum[]
+  }
+
+  /**
+   * CashClosing findFirstOrThrow
+   */
+  export type CashClosingFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CashClosing
+     */
+    select?: CashClosingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CashClosing
+     */
+    omit?: CashClosingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CashClosingInclude<ExtArgs> | null
+    /**
+     * Filter, which CashClosing to fetch.
+     */
+    where?: CashClosingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CashClosings to fetch.
+     */
+    orderBy?: CashClosingOrderByWithRelationInput | CashClosingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CashClosings.
+     */
+    cursor?: CashClosingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CashClosings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CashClosings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CashClosings.
+     */
+    distinct?: CashClosingScalarFieldEnum | CashClosingScalarFieldEnum[]
+  }
+
+  /**
+   * CashClosing findMany
+   */
+  export type CashClosingFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CashClosing
+     */
+    select?: CashClosingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CashClosing
+     */
+    omit?: CashClosingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CashClosingInclude<ExtArgs> | null
+    /**
+     * Filter, which CashClosings to fetch.
+     */
+    where?: CashClosingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CashClosings to fetch.
+     */
+    orderBy?: CashClosingOrderByWithRelationInput | CashClosingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing CashClosings.
+     */
+    cursor?: CashClosingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CashClosings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CashClosings.
+     */
+    skip?: number
+    distinct?: CashClosingScalarFieldEnum | CashClosingScalarFieldEnum[]
+  }
+
+  /**
+   * CashClosing create
+   */
+  export type CashClosingCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CashClosing
+     */
+    select?: CashClosingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CashClosing
+     */
+    omit?: CashClosingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CashClosingInclude<ExtArgs> | null
+    /**
+     * The data needed to create a CashClosing.
+     */
+    data: XOR<CashClosingCreateInput, CashClosingUncheckedCreateInput>
+  }
+
+  /**
+   * CashClosing createMany
+   */
+  export type CashClosingCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many CashClosings.
+     */
+    data: CashClosingCreateManyInput | CashClosingCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * CashClosing createManyAndReturn
+   */
+  export type CashClosingCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CashClosing
+     */
+    select?: CashClosingSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CashClosing
+     */
+    omit?: CashClosingOmit<ExtArgs> | null
+    /**
+     * The data used to create many CashClosings.
+     */
+    data: CashClosingCreateManyInput | CashClosingCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CashClosingIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CashClosing update
+   */
+  export type CashClosingUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CashClosing
+     */
+    select?: CashClosingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CashClosing
+     */
+    omit?: CashClosingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CashClosingInclude<ExtArgs> | null
+    /**
+     * The data needed to update a CashClosing.
+     */
+    data: XOR<CashClosingUpdateInput, CashClosingUncheckedUpdateInput>
+    /**
+     * Choose, which CashClosing to update.
+     */
+    where: CashClosingWhereUniqueInput
+  }
+
+  /**
+   * CashClosing updateMany
+   */
+  export type CashClosingUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update CashClosings.
+     */
+    data: XOR<CashClosingUpdateManyMutationInput, CashClosingUncheckedUpdateManyInput>
+    /**
+     * Filter which CashClosings to update
+     */
+    where?: CashClosingWhereInput
+    /**
+     * Limit how many CashClosings to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * CashClosing updateManyAndReturn
+   */
+  export type CashClosingUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CashClosing
+     */
+    select?: CashClosingSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CashClosing
+     */
+    omit?: CashClosingOmit<ExtArgs> | null
+    /**
+     * The data used to update CashClosings.
+     */
+    data: XOR<CashClosingUpdateManyMutationInput, CashClosingUncheckedUpdateManyInput>
+    /**
+     * Filter which CashClosings to update
+     */
+    where?: CashClosingWhereInput
+    /**
+     * Limit how many CashClosings to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CashClosingIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CashClosing upsert
+   */
+  export type CashClosingUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CashClosing
+     */
+    select?: CashClosingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CashClosing
+     */
+    omit?: CashClosingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CashClosingInclude<ExtArgs> | null
+    /**
+     * The filter to search for the CashClosing to update in case it exists.
+     */
+    where: CashClosingWhereUniqueInput
+    /**
+     * In case the CashClosing found by the `where` argument doesn't exist, create a new CashClosing with this data.
+     */
+    create: XOR<CashClosingCreateInput, CashClosingUncheckedCreateInput>
+    /**
+     * In case the CashClosing was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CashClosingUpdateInput, CashClosingUncheckedUpdateInput>
+  }
+
+  /**
+   * CashClosing delete
+   */
+  export type CashClosingDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CashClosing
+     */
+    select?: CashClosingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CashClosing
+     */
+    omit?: CashClosingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CashClosingInclude<ExtArgs> | null
+    /**
+     * Filter which CashClosing to delete.
+     */
+    where: CashClosingWhereUniqueInput
+  }
+
+  /**
+   * CashClosing deleteMany
+   */
+  export type CashClosingDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CashClosings to delete
+     */
+    where?: CashClosingWhereInput
+    /**
+     * Limit how many CashClosings to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * CashClosing without action
+   */
+  export type CashClosingDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CashClosing
+     */
+    select?: CashClosingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CashClosing
+     */
+    omit?: CashClosingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CashClosingInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model AuditLog
    */
 
@@ -23297,6 +24633,24 @@ export namespace Prisma {
   export type CashMovementScalarFieldEnum = (typeof CashMovementScalarFieldEnum)[keyof typeof CashMovementScalarFieldEnum]
 
 
+  export const CashClosingScalarFieldEnum: {
+    id: 'id',
+    closingDate: 'closingDate',
+    openingBalance: 'openingBalance',
+    totalIn: 'totalIn',
+    totalOut: 'totalOut',
+    ownerWithdrawals: 'ownerWithdrawals',
+    expectedBalance: 'expectedBalance',
+    actualBalance: 'actualBalance',
+    difference: 'difference',
+    notes: 'notes',
+    closedBy: 'closedBy',
+    closedAt: 'closedAt'
+  };
+
+  export type CashClosingScalarFieldEnum = (typeof CashClosingScalarFieldEnum)[keyof typeof CashClosingScalarFieldEnum]
+
+
   export const AuditLogScalarFieldEnum: {
     id: 'id',
     userId: 'userId',
@@ -23659,6 +25013,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalListRelationFilter
     ownerWithdrawalsReversed?: OwnerWithdrawalListRelationFilter
     cashMovements?: CashMovementListRelationFilter
+    cashClosings?: CashClosingListRelationFilter
     auditLogs?: AuditLogListRelationFilter
     backups?: BackupListRelationFilter
   }
@@ -23683,6 +25038,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalOrderByRelationAggregateInput
     ownerWithdrawalsReversed?: OwnerWithdrawalOrderByRelationAggregateInput
     cashMovements?: CashMovementOrderByRelationAggregateInput
+    cashClosings?: CashClosingOrderByRelationAggregateInput
     auditLogs?: AuditLogOrderByRelationAggregateInput
     backups?: BackupOrderByRelationAggregateInput
   }
@@ -23710,6 +25066,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalListRelationFilter
     ownerWithdrawalsReversed?: OwnerWithdrawalListRelationFilter
     cashMovements?: CashMovementListRelationFilter
+    cashClosings?: CashClosingListRelationFilter
     auditLogs?: AuditLogListRelationFilter
     backups?: BackupListRelationFilter
   }, "id" | "email">
@@ -24855,6 +26212,98 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"CashMovement"> | Date | string
   }
 
+  export type CashClosingWhereInput = {
+    AND?: CashClosingWhereInput | CashClosingWhereInput[]
+    OR?: CashClosingWhereInput[]
+    NOT?: CashClosingWhereInput | CashClosingWhereInput[]
+    id?: UuidFilter<"CashClosing"> | string
+    closingDate?: DateTimeFilter<"CashClosing"> | Date | string
+    openingBalance?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    totalIn?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    totalOut?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    ownerWithdrawals?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    expectedBalance?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    actualBalance?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    difference?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    notes?: StringNullableFilter<"CashClosing"> | string | null
+    closedBy?: UuidFilter<"CashClosing"> | string
+    closedAt?: DateTimeFilter<"CashClosing"> | Date | string
+    closedByUser?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type CashClosingOrderByWithRelationInput = {
+    id?: SortOrder
+    closingDate?: SortOrder
+    openingBalance?: SortOrder
+    totalIn?: SortOrder
+    totalOut?: SortOrder
+    ownerWithdrawals?: SortOrder
+    expectedBalance?: SortOrder
+    actualBalance?: SortOrder
+    difference?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    closedBy?: SortOrder
+    closedAt?: SortOrder
+    closedByUser?: UserOrderByWithRelationInput
+  }
+
+  export type CashClosingWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    closingDate?: Date | string
+    AND?: CashClosingWhereInput | CashClosingWhereInput[]
+    OR?: CashClosingWhereInput[]
+    NOT?: CashClosingWhereInput | CashClosingWhereInput[]
+    openingBalance?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    totalIn?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    totalOut?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    ownerWithdrawals?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    expectedBalance?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    actualBalance?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    difference?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    notes?: StringNullableFilter<"CashClosing"> | string | null
+    closedBy?: UuidFilter<"CashClosing"> | string
+    closedAt?: DateTimeFilter<"CashClosing"> | Date | string
+    closedByUser?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "closingDate">
+
+  export type CashClosingOrderByWithAggregationInput = {
+    id?: SortOrder
+    closingDate?: SortOrder
+    openingBalance?: SortOrder
+    totalIn?: SortOrder
+    totalOut?: SortOrder
+    ownerWithdrawals?: SortOrder
+    expectedBalance?: SortOrder
+    actualBalance?: SortOrder
+    difference?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    closedBy?: SortOrder
+    closedAt?: SortOrder
+    _count?: CashClosingCountOrderByAggregateInput
+    _avg?: CashClosingAvgOrderByAggregateInput
+    _max?: CashClosingMaxOrderByAggregateInput
+    _min?: CashClosingMinOrderByAggregateInput
+    _sum?: CashClosingSumOrderByAggregateInput
+  }
+
+  export type CashClosingScalarWhereWithAggregatesInput = {
+    AND?: CashClosingScalarWhereWithAggregatesInput | CashClosingScalarWhereWithAggregatesInput[]
+    OR?: CashClosingScalarWhereWithAggregatesInput[]
+    NOT?: CashClosingScalarWhereWithAggregatesInput | CashClosingScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"CashClosing"> | string
+    closingDate?: DateTimeWithAggregatesFilter<"CashClosing"> | Date | string
+    openingBalance?: DecimalWithAggregatesFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    totalIn?: DecimalWithAggregatesFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    totalOut?: DecimalWithAggregatesFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    ownerWithdrawals?: DecimalWithAggregatesFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    expectedBalance?: DecimalWithAggregatesFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    actualBalance?: DecimalWithAggregatesFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    difference?: DecimalWithAggregatesFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    notes?: StringNullableWithAggregatesFilter<"CashClosing"> | string | null
+    closedBy?: UuidWithAggregatesFilter<"CashClosing"> | string
+    closedAt?: DateTimeWithAggregatesFilter<"CashClosing"> | Date | string
+  }
+
   export type AuditLogWhereInput = {
     AND?: AuditLogWhereInput | AuditLogWhereInput[]
     OR?: AuditLogWhereInput[]
@@ -25101,6 +26550,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     backups?: BackupCreateNestedManyWithoutCreatedByUserInput
   }
@@ -25125,6 +26575,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementUncheckedCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingUncheckedCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     backups?: BackupUncheckedCreateNestedManyWithoutCreatedByUserInput
   }
@@ -25149,6 +26600,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     backups?: BackupUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -25173,6 +26625,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUncheckedUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     backups?: BackupUncheckedUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -26405,6 +27858,110 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type CashClosingCreateInput = {
+    id?: string
+    closingDate: Date | string
+    openingBalance: Decimal | DecimalJsLike | number | string
+    totalIn: Decimal | DecimalJsLike | number | string
+    totalOut: Decimal | DecimalJsLike | number | string
+    ownerWithdrawals: Decimal | DecimalJsLike | number | string
+    expectedBalance: Decimal | DecimalJsLike | number | string
+    actualBalance: Decimal | DecimalJsLike | number | string
+    difference: Decimal | DecimalJsLike | number | string
+    notes?: string | null
+    closedAt?: Date | string
+    closedByUser: UserCreateNestedOneWithoutCashClosingsInput
+  }
+
+  export type CashClosingUncheckedCreateInput = {
+    id?: string
+    closingDate: Date | string
+    openingBalance: Decimal | DecimalJsLike | number | string
+    totalIn: Decimal | DecimalJsLike | number | string
+    totalOut: Decimal | DecimalJsLike | number | string
+    ownerWithdrawals: Decimal | DecimalJsLike | number | string
+    expectedBalance: Decimal | DecimalJsLike | number | string
+    actualBalance: Decimal | DecimalJsLike | number | string
+    difference: Decimal | DecimalJsLike | number | string
+    notes?: string | null
+    closedBy: string
+    closedAt?: Date | string
+  }
+
+  export type CashClosingUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    closingDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    openingBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalIn?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalOut?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerWithdrawals?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    expectedBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    actualBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    difference?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    closedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    closedByUser?: UserUpdateOneRequiredWithoutCashClosingsNestedInput
+  }
+
+  export type CashClosingUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    closingDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    openingBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalIn?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalOut?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerWithdrawals?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    expectedBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    actualBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    difference?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    closedBy?: StringFieldUpdateOperationsInput | string
+    closedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CashClosingCreateManyInput = {
+    id?: string
+    closingDate: Date | string
+    openingBalance: Decimal | DecimalJsLike | number | string
+    totalIn: Decimal | DecimalJsLike | number | string
+    totalOut: Decimal | DecimalJsLike | number | string
+    ownerWithdrawals: Decimal | DecimalJsLike | number | string
+    expectedBalance: Decimal | DecimalJsLike | number | string
+    actualBalance: Decimal | DecimalJsLike | number | string
+    difference: Decimal | DecimalJsLike | number | string
+    notes?: string | null
+    closedBy: string
+    closedAt?: Date | string
+  }
+
+  export type CashClosingUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    closingDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    openingBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalIn?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalOut?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerWithdrawals?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    expectedBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    actualBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    difference?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    closedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CashClosingUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    closingDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    openingBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalIn?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalOut?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerWithdrawals?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    expectedBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    actualBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    difference?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    closedBy?: StringFieldUpdateOperationsInput | string
+    closedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type AuditLogCreateInput = {
     id?: string
     action: $Enums.AuditAction
@@ -26752,6 +28309,12 @@ export namespace Prisma {
     none?: CashMovementWhereInput
   }
 
+  export type CashClosingListRelationFilter = {
+    every?: CashClosingWhereInput
+    some?: CashClosingWhereInput
+    none?: CashClosingWhereInput
+  }
+
   export type AuditLogListRelationFilter = {
     every?: AuditLogWhereInput
     some?: AuditLogWhereInput
@@ -26793,6 +28356,10 @@ export namespace Prisma {
   }
 
   export type CashMovementOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type CashClosingOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -27843,6 +29410,71 @@ export namespace Prisma {
     _max?: NestedEnumCashSourceTypeFilter<$PrismaModel>
   }
 
+  export type CashClosingCountOrderByAggregateInput = {
+    id?: SortOrder
+    closingDate?: SortOrder
+    openingBalance?: SortOrder
+    totalIn?: SortOrder
+    totalOut?: SortOrder
+    ownerWithdrawals?: SortOrder
+    expectedBalance?: SortOrder
+    actualBalance?: SortOrder
+    difference?: SortOrder
+    notes?: SortOrder
+    closedBy?: SortOrder
+    closedAt?: SortOrder
+  }
+
+  export type CashClosingAvgOrderByAggregateInput = {
+    openingBalance?: SortOrder
+    totalIn?: SortOrder
+    totalOut?: SortOrder
+    ownerWithdrawals?: SortOrder
+    expectedBalance?: SortOrder
+    actualBalance?: SortOrder
+    difference?: SortOrder
+  }
+
+  export type CashClosingMaxOrderByAggregateInput = {
+    id?: SortOrder
+    closingDate?: SortOrder
+    openingBalance?: SortOrder
+    totalIn?: SortOrder
+    totalOut?: SortOrder
+    ownerWithdrawals?: SortOrder
+    expectedBalance?: SortOrder
+    actualBalance?: SortOrder
+    difference?: SortOrder
+    notes?: SortOrder
+    closedBy?: SortOrder
+    closedAt?: SortOrder
+  }
+
+  export type CashClosingMinOrderByAggregateInput = {
+    id?: SortOrder
+    closingDate?: SortOrder
+    openingBalance?: SortOrder
+    totalIn?: SortOrder
+    totalOut?: SortOrder
+    ownerWithdrawals?: SortOrder
+    expectedBalance?: SortOrder
+    actualBalance?: SortOrder
+    difference?: SortOrder
+    notes?: SortOrder
+    closedBy?: SortOrder
+    closedAt?: SortOrder
+  }
+
+  export type CashClosingSumOrderByAggregateInput = {
+    openingBalance?: SortOrder
+    totalIn?: SortOrder
+    totalOut?: SortOrder
+    ownerWithdrawals?: SortOrder
+    expectedBalance?: SortOrder
+    actualBalance?: SortOrder
+    difference?: SortOrder
+  }
+
   export type EnumAuditActionFilter<$PrismaModel = never> = {
     equals?: $Enums.AuditAction | EnumAuditActionFieldRefInput<$PrismaModel>
     in?: $Enums.AuditAction[] | ListEnumAuditActionFieldRefInput<$PrismaModel>
@@ -28149,6 +29781,13 @@ export namespace Prisma {
     connect?: CashMovementWhereUniqueInput | CashMovementWhereUniqueInput[]
   }
 
+  export type CashClosingCreateNestedManyWithoutClosedByUserInput = {
+    create?: XOR<CashClosingCreateWithoutClosedByUserInput, CashClosingUncheckedCreateWithoutClosedByUserInput> | CashClosingCreateWithoutClosedByUserInput[] | CashClosingUncheckedCreateWithoutClosedByUserInput[]
+    connectOrCreate?: CashClosingCreateOrConnectWithoutClosedByUserInput | CashClosingCreateOrConnectWithoutClosedByUserInput[]
+    createMany?: CashClosingCreateManyClosedByUserInputEnvelope
+    connect?: CashClosingWhereUniqueInput | CashClosingWhereUniqueInput[]
+  }
+
   export type AuditLogCreateNestedManyWithoutUserInput = {
     create?: XOR<AuditLogCreateWithoutUserInput, AuditLogUncheckedCreateWithoutUserInput> | AuditLogCreateWithoutUserInput[] | AuditLogUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AuditLogCreateOrConnectWithoutUserInput | AuditLogCreateOrConnectWithoutUserInput[]
@@ -28252,6 +29891,13 @@ export namespace Prisma {
     connectOrCreate?: CashMovementCreateOrConnectWithoutCreatedByUserInput | CashMovementCreateOrConnectWithoutCreatedByUserInput[]
     createMany?: CashMovementCreateManyCreatedByUserInputEnvelope
     connect?: CashMovementWhereUniqueInput | CashMovementWhereUniqueInput[]
+  }
+
+  export type CashClosingUncheckedCreateNestedManyWithoutClosedByUserInput = {
+    create?: XOR<CashClosingCreateWithoutClosedByUserInput, CashClosingUncheckedCreateWithoutClosedByUserInput> | CashClosingCreateWithoutClosedByUserInput[] | CashClosingUncheckedCreateWithoutClosedByUserInput[]
+    connectOrCreate?: CashClosingCreateOrConnectWithoutClosedByUserInput | CashClosingCreateOrConnectWithoutClosedByUserInput[]
+    createMany?: CashClosingCreateManyClosedByUserInputEnvelope
+    connect?: CashClosingWhereUniqueInput | CashClosingWhereUniqueInput[]
   }
 
   export type AuditLogUncheckedCreateNestedManyWithoutUserInput = {
@@ -28466,6 +30112,20 @@ export namespace Prisma {
     deleteMany?: CashMovementScalarWhereInput | CashMovementScalarWhereInput[]
   }
 
+  export type CashClosingUpdateManyWithoutClosedByUserNestedInput = {
+    create?: XOR<CashClosingCreateWithoutClosedByUserInput, CashClosingUncheckedCreateWithoutClosedByUserInput> | CashClosingCreateWithoutClosedByUserInput[] | CashClosingUncheckedCreateWithoutClosedByUserInput[]
+    connectOrCreate?: CashClosingCreateOrConnectWithoutClosedByUserInput | CashClosingCreateOrConnectWithoutClosedByUserInput[]
+    upsert?: CashClosingUpsertWithWhereUniqueWithoutClosedByUserInput | CashClosingUpsertWithWhereUniqueWithoutClosedByUserInput[]
+    createMany?: CashClosingCreateManyClosedByUserInputEnvelope
+    set?: CashClosingWhereUniqueInput | CashClosingWhereUniqueInput[]
+    disconnect?: CashClosingWhereUniqueInput | CashClosingWhereUniqueInput[]
+    delete?: CashClosingWhereUniqueInput | CashClosingWhereUniqueInput[]
+    connect?: CashClosingWhereUniqueInput | CashClosingWhereUniqueInput[]
+    update?: CashClosingUpdateWithWhereUniqueWithoutClosedByUserInput | CashClosingUpdateWithWhereUniqueWithoutClosedByUserInput[]
+    updateMany?: CashClosingUpdateManyWithWhereWithoutClosedByUserInput | CashClosingUpdateManyWithWhereWithoutClosedByUserInput[]
+    deleteMany?: CashClosingScalarWhereInput | CashClosingScalarWhereInput[]
+  }
+
   export type AuditLogUpdateManyWithoutUserNestedInput = {
     create?: XOR<AuditLogCreateWithoutUserInput, AuditLogUncheckedCreateWithoutUserInput> | AuditLogCreateWithoutUserInput[] | AuditLogUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AuditLogCreateOrConnectWithoutUserInput | AuditLogCreateOrConnectWithoutUserInput[]
@@ -28674,6 +30334,20 @@ export namespace Prisma {
     update?: CashMovementUpdateWithWhereUniqueWithoutCreatedByUserInput | CashMovementUpdateWithWhereUniqueWithoutCreatedByUserInput[]
     updateMany?: CashMovementUpdateManyWithWhereWithoutCreatedByUserInput | CashMovementUpdateManyWithWhereWithoutCreatedByUserInput[]
     deleteMany?: CashMovementScalarWhereInput | CashMovementScalarWhereInput[]
+  }
+
+  export type CashClosingUncheckedUpdateManyWithoutClosedByUserNestedInput = {
+    create?: XOR<CashClosingCreateWithoutClosedByUserInput, CashClosingUncheckedCreateWithoutClosedByUserInput> | CashClosingCreateWithoutClosedByUserInput[] | CashClosingUncheckedCreateWithoutClosedByUserInput[]
+    connectOrCreate?: CashClosingCreateOrConnectWithoutClosedByUserInput | CashClosingCreateOrConnectWithoutClosedByUserInput[]
+    upsert?: CashClosingUpsertWithWhereUniqueWithoutClosedByUserInput | CashClosingUpsertWithWhereUniqueWithoutClosedByUserInput[]
+    createMany?: CashClosingCreateManyClosedByUserInputEnvelope
+    set?: CashClosingWhereUniqueInput | CashClosingWhereUniqueInput[]
+    disconnect?: CashClosingWhereUniqueInput | CashClosingWhereUniqueInput[]
+    delete?: CashClosingWhereUniqueInput | CashClosingWhereUniqueInput[]
+    connect?: CashClosingWhereUniqueInput | CashClosingWhereUniqueInput[]
+    update?: CashClosingUpdateWithWhereUniqueWithoutClosedByUserInput | CashClosingUpdateWithWhereUniqueWithoutClosedByUserInput[]
+    updateMany?: CashClosingUpdateManyWithWhereWithoutClosedByUserInput | CashClosingUpdateManyWithWhereWithoutClosedByUserInput[]
+    deleteMany?: CashClosingScalarWhereInput | CashClosingScalarWhereInput[]
   }
 
   export type AuditLogUncheckedUpdateManyWithoutUserNestedInput = {
@@ -29398,6 +31072,20 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutCashMovementsInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCashMovementsInput, UserUpdateWithoutCashMovementsInput>, UserUncheckedUpdateWithoutCashMovementsInput>
+  }
+
+  export type UserCreateNestedOneWithoutCashClosingsInput = {
+    create?: XOR<UserCreateWithoutCashClosingsInput, UserUncheckedCreateWithoutCashClosingsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCashClosingsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutCashClosingsNestedInput = {
+    create?: XOR<UserCreateWithoutCashClosingsInput, UserUncheckedCreateWithoutCashClosingsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCashClosingsInput
+    upsert?: UserUpsertWithoutCashClosingsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCashClosingsInput, UserUpdateWithoutCashClosingsInput>, UserUncheckedUpdateWithoutCashClosingsInput>
   }
 
   export type UserCreateNestedOneWithoutAuditLogsInput = {
@@ -30397,6 +32085,44 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type CashClosingCreateWithoutClosedByUserInput = {
+    id?: string
+    closingDate: Date | string
+    openingBalance: Decimal | DecimalJsLike | number | string
+    totalIn: Decimal | DecimalJsLike | number | string
+    totalOut: Decimal | DecimalJsLike | number | string
+    ownerWithdrawals: Decimal | DecimalJsLike | number | string
+    expectedBalance: Decimal | DecimalJsLike | number | string
+    actualBalance: Decimal | DecimalJsLike | number | string
+    difference: Decimal | DecimalJsLike | number | string
+    notes?: string | null
+    closedAt?: Date | string
+  }
+
+  export type CashClosingUncheckedCreateWithoutClosedByUserInput = {
+    id?: string
+    closingDate: Date | string
+    openingBalance: Decimal | DecimalJsLike | number | string
+    totalIn: Decimal | DecimalJsLike | number | string
+    totalOut: Decimal | DecimalJsLike | number | string
+    ownerWithdrawals: Decimal | DecimalJsLike | number | string
+    expectedBalance: Decimal | DecimalJsLike | number | string
+    actualBalance: Decimal | DecimalJsLike | number | string
+    difference: Decimal | DecimalJsLike | number | string
+    notes?: string | null
+    closedAt?: Date | string
+  }
+
+  export type CashClosingCreateOrConnectWithoutClosedByUserInput = {
+    where: CashClosingWhereUniqueInput
+    create: XOR<CashClosingCreateWithoutClosedByUserInput, CashClosingUncheckedCreateWithoutClosedByUserInput>
+  }
+
+  export type CashClosingCreateManyClosedByUserInputEnvelope = {
+    data: CashClosingCreateManyClosedByUserInput | CashClosingCreateManyClosedByUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type AuditLogCreateWithoutUserInput = {
     id?: string
     action: $Enums.AuditAction
@@ -30804,6 +32530,40 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"CashMovement"> | Date | string
   }
 
+  export type CashClosingUpsertWithWhereUniqueWithoutClosedByUserInput = {
+    where: CashClosingWhereUniqueInput
+    update: XOR<CashClosingUpdateWithoutClosedByUserInput, CashClosingUncheckedUpdateWithoutClosedByUserInput>
+    create: XOR<CashClosingCreateWithoutClosedByUserInput, CashClosingUncheckedCreateWithoutClosedByUserInput>
+  }
+
+  export type CashClosingUpdateWithWhereUniqueWithoutClosedByUserInput = {
+    where: CashClosingWhereUniqueInput
+    data: XOR<CashClosingUpdateWithoutClosedByUserInput, CashClosingUncheckedUpdateWithoutClosedByUserInput>
+  }
+
+  export type CashClosingUpdateManyWithWhereWithoutClosedByUserInput = {
+    where: CashClosingScalarWhereInput
+    data: XOR<CashClosingUpdateManyMutationInput, CashClosingUncheckedUpdateManyWithoutClosedByUserInput>
+  }
+
+  export type CashClosingScalarWhereInput = {
+    AND?: CashClosingScalarWhereInput | CashClosingScalarWhereInput[]
+    OR?: CashClosingScalarWhereInput[]
+    NOT?: CashClosingScalarWhereInput | CashClosingScalarWhereInput[]
+    id?: UuidFilter<"CashClosing"> | string
+    closingDate?: DateTimeFilter<"CashClosing"> | Date | string
+    openingBalance?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    totalIn?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    totalOut?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    ownerWithdrawals?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    expectedBalance?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    actualBalance?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    difference?: DecimalFilter<"CashClosing"> | Decimal | DecimalJsLike | number | string
+    notes?: StringNullableFilter<"CashClosing"> | string | null
+    closedBy?: UuidFilter<"CashClosing"> | string
+    closedAt?: DateTimeFilter<"CashClosing"> | Date | string
+  }
+
   export type AuditLogUpsertWithWhereUniqueWithoutUserInput = {
     where: AuditLogWhereUniqueInput
     update: XOR<AuditLogUpdateWithoutUserInput, AuditLogUncheckedUpdateWithoutUserInput>
@@ -31026,6 +32786,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     backups?: BackupCreateNestedManyWithoutCreatedByUserInput
   }
@@ -31049,6 +32810,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementUncheckedCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingUncheckedCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     backups?: BackupUncheckedCreateNestedManyWithoutCreatedByUserInput
   }
@@ -31161,6 +32923,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     backups?: BackupUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -31184,6 +32947,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUncheckedUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     backups?: BackupUncheckedUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -31250,6 +33014,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     backups?: BackupCreateNestedManyWithoutCreatedByUserInput
   }
@@ -31273,6 +33038,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementUncheckedCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingUncheckedCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     backups?: BackupUncheckedCreateNestedManyWithoutCreatedByUserInput
   }
@@ -31345,6 +33111,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     backups?: BackupUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -31368,6 +33135,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUncheckedUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     backups?: BackupUncheckedUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -31480,6 +33248,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     backups?: BackupCreateNestedManyWithoutCreatedByUserInput
   }
@@ -31503,6 +33272,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementUncheckedCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingUncheckedCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     backups?: BackupUncheckedCreateNestedManyWithoutCreatedByUserInput
   }
@@ -31531,6 +33301,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     backups?: BackupCreateNestedManyWithoutCreatedByUserInput
   }
@@ -31554,6 +33325,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementUncheckedCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingUncheckedCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     backups?: BackupUncheckedCreateNestedManyWithoutCreatedByUserInput
   }
@@ -31694,6 +33466,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     backups?: BackupUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -31717,6 +33490,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUncheckedUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     backups?: BackupUncheckedUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -31751,6 +33525,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     backups?: BackupUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -31774,6 +33549,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUncheckedUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     backups?: BackupUncheckedUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -32024,6 +33800,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     backups?: BackupCreateNestedManyWithoutCreatedByUserInput
   }
@@ -32047,6 +33824,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementUncheckedCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingUncheckedCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     backups?: BackupUncheckedCreateNestedManyWithoutCreatedByUserInput
   }
@@ -32075,6 +33853,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     backups?: BackupCreateNestedManyWithoutCreatedByUserInput
   }
@@ -32098,6 +33877,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementUncheckedCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingUncheckedCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     backups?: BackupUncheckedCreateNestedManyWithoutCreatedByUserInput
   }
@@ -32182,6 +33962,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     backups?: BackupUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -32205,6 +33986,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUncheckedUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     backups?: BackupUncheckedUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -32239,6 +34021,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     backups?: BackupUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -32262,6 +34045,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUncheckedUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     backups?: BackupUncheckedUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -32372,6 +34156,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     backups?: BackupCreateNestedManyWithoutCreatedByUserInput
   }
@@ -32395,6 +34180,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementUncheckedCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingUncheckedCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     backups?: BackupUncheckedCreateNestedManyWithoutCreatedByUserInput
   }
@@ -32423,6 +34209,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     backups?: BackupCreateNestedManyWithoutCreatedByUserInput
   }
@@ -32446,6 +34233,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementUncheckedCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingUncheckedCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     backups?: BackupUncheckedCreateNestedManyWithoutCreatedByUserInput
   }
@@ -32524,6 +34312,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     backups?: BackupUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -32547,6 +34336,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUncheckedUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     backups?: BackupUncheckedUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -32581,6 +34371,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     backups?: BackupUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -32604,6 +34395,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUncheckedUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     backups?: BackupUncheckedUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -32706,6 +34498,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     backups?: BackupCreateNestedManyWithoutCreatedByUserInput
   }
@@ -32729,6 +34522,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementUncheckedCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingUncheckedCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     backups?: BackupUncheckedCreateNestedManyWithoutCreatedByUserInput
   }
@@ -32757,6 +34551,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     backups?: BackupCreateNestedManyWithoutCreatedByUserInput
   }
@@ -32780,6 +34575,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementUncheckedCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingUncheckedCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     backups?: BackupUncheckedCreateNestedManyWithoutCreatedByUserInput
   }
@@ -32848,6 +34644,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     backups?: BackupUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -32871,6 +34668,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUncheckedUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     backups?: BackupUncheckedUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -32905,6 +34703,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     backups?: BackupUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -32928,6 +34727,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUncheckedUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     backups?: BackupUncheckedUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -32951,6 +34751,7 @@ export namespace Prisma {
     expensesReversed?: ExpenseCreateNestedManyWithoutReversedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     backups?: BackupCreateNestedManyWithoutCreatedByUserInput
   }
@@ -32974,6 +34775,7 @@ export namespace Prisma {
     expensesReversed?: ExpenseUncheckedCreateNestedManyWithoutReversedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementUncheckedCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingUncheckedCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     backups?: BackupUncheckedCreateNestedManyWithoutCreatedByUserInput
   }
@@ -33002,6 +34804,7 @@ export namespace Prisma {
     expensesReversed?: ExpenseCreateNestedManyWithoutReversedByUserInput
     ownerWithdrawalsCreated?: OwnerWithdrawalCreateNestedManyWithoutCreatedByUserInput
     cashMovements?: CashMovementCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     backups?: BackupCreateNestedManyWithoutCreatedByUserInput
   }
@@ -33025,6 +34828,7 @@ export namespace Prisma {
     expensesReversed?: ExpenseUncheckedCreateNestedManyWithoutReversedByUserInput
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedCreateNestedManyWithoutCreatedByUserInput
     cashMovements?: CashMovementUncheckedCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingUncheckedCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     backups?: BackupUncheckedCreateNestedManyWithoutCreatedByUserInput
   }
@@ -33064,6 +34868,7 @@ export namespace Prisma {
     expensesReversed?: ExpenseUpdateManyWithoutReversedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     backups?: BackupUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -33087,6 +34892,7 @@ export namespace Prisma {
     expensesReversed?: ExpenseUncheckedUpdateManyWithoutReversedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUncheckedUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     backups?: BackupUncheckedUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -33121,6 +34927,7 @@ export namespace Prisma {
     expensesReversed?: ExpenseUpdateManyWithoutReversedByUserNestedInput
     ownerWithdrawalsCreated?: OwnerWithdrawalUpdateManyWithoutCreatedByUserNestedInput
     cashMovements?: CashMovementUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     backups?: BackupUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -33144,6 +34951,7 @@ export namespace Prisma {
     expensesReversed?: ExpenseUncheckedUpdateManyWithoutReversedByUserNestedInput
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedUpdateManyWithoutCreatedByUserNestedInput
     cashMovements?: CashMovementUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUncheckedUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     backups?: BackupUncheckedUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -33167,6 +34975,7 @@ export namespace Prisma {
     expensesReversed?: ExpenseCreateNestedManyWithoutReversedByUserInput
     ownerWithdrawalsCreated?: OwnerWithdrawalCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalCreateNestedManyWithoutReversedByUserInput
+    cashClosings?: CashClosingCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     backups?: BackupCreateNestedManyWithoutCreatedByUserInput
   }
@@ -33190,6 +34999,7 @@ export namespace Prisma {
     expensesReversed?: ExpenseUncheckedCreateNestedManyWithoutReversedByUserInput
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedCreateNestedManyWithoutReversedByUserInput
+    cashClosings?: CashClosingUncheckedCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     backups?: BackupUncheckedCreateNestedManyWithoutCreatedByUserInput
   }
@@ -33229,6 +35039,7 @@ export namespace Prisma {
     expensesReversed?: ExpenseUpdateManyWithoutReversedByUserNestedInput
     ownerWithdrawalsCreated?: OwnerWithdrawalUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUpdateManyWithoutReversedByUserNestedInput
+    cashClosings?: CashClosingUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     backups?: BackupUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -33252,6 +35063,119 @@ export namespace Prisma {
     expensesReversed?: ExpenseUncheckedUpdateManyWithoutReversedByUserNestedInput
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedUpdateManyWithoutReversedByUserNestedInput
+    cashClosings?: CashClosingUncheckedUpdateManyWithoutClosedByUserNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
+    backups?: BackupUncheckedUpdateManyWithoutCreatedByUserNestedInput
+  }
+
+  export type UserCreateWithoutCashClosingsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    tokenVersion?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    packageStocks?: PackageStockCreateNestedManyWithoutCreatedByUserInput
+    inventoryMovements?: InventoryMovementCreateNestedManyWithoutCreatedByUserInput
+    salesCreated?: SaleCreateNestedManyWithoutCreatedByUserInput
+    salesCancelled?: SaleCreateNestedManyWithoutCancelledByUserInput
+    paymentsCreated?: PaymentCreateNestedManyWithoutCreatedByUserInput
+    paymentsReversed?: PaymentCreateNestedManyWithoutReversedByUserInput
+    linePaymentsCreated?: LinePaymentCreateNestedManyWithoutCreatedByUserInput
+    linePaymentsReversed?: LinePaymentCreateNestedManyWithoutReversedByUserInput
+    expensesCreated?: ExpenseCreateNestedManyWithoutCreatedByUserInput
+    expensesReversed?: ExpenseCreateNestedManyWithoutReversedByUserInput
+    ownerWithdrawalsCreated?: OwnerWithdrawalCreateNestedManyWithoutCreatedByUserInput
+    ownerWithdrawalsReversed?: OwnerWithdrawalCreateNestedManyWithoutReversedByUserInput
+    cashMovements?: CashMovementCreateNestedManyWithoutCreatedByUserInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
+    backups?: BackupCreateNestedManyWithoutCreatedByUserInput
+  }
+
+  export type UserUncheckedCreateWithoutCashClosingsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    tokenVersion?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    packageStocks?: PackageStockUncheckedCreateNestedManyWithoutCreatedByUserInput
+    inventoryMovements?: InventoryMovementUncheckedCreateNestedManyWithoutCreatedByUserInput
+    salesCreated?: SaleUncheckedCreateNestedManyWithoutCreatedByUserInput
+    salesCancelled?: SaleUncheckedCreateNestedManyWithoutCancelledByUserInput
+    paymentsCreated?: PaymentUncheckedCreateNestedManyWithoutCreatedByUserInput
+    paymentsReversed?: PaymentUncheckedCreateNestedManyWithoutReversedByUserInput
+    linePaymentsCreated?: LinePaymentUncheckedCreateNestedManyWithoutCreatedByUserInput
+    linePaymentsReversed?: LinePaymentUncheckedCreateNestedManyWithoutReversedByUserInput
+    expensesCreated?: ExpenseUncheckedCreateNestedManyWithoutCreatedByUserInput
+    expensesReversed?: ExpenseUncheckedCreateNestedManyWithoutReversedByUserInput
+    ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedCreateNestedManyWithoutCreatedByUserInput
+    ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedCreateNestedManyWithoutReversedByUserInput
+    cashMovements?: CashMovementUncheckedCreateNestedManyWithoutCreatedByUserInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
+    backups?: BackupUncheckedCreateNestedManyWithoutCreatedByUserInput
+  }
+
+  export type UserCreateOrConnectWithoutCashClosingsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutCashClosingsInput, UserUncheckedCreateWithoutCashClosingsInput>
+  }
+
+  export type UserUpsertWithoutCashClosingsInput = {
+    update: XOR<UserUpdateWithoutCashClosingsInput, UserUncheckedUpdateWithoutCashClosingsInput>
+    create: XOR<UserCreateWithoutCashClosingsInput, UserUncheckedCreateWithoutCashClosingsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutCashClosingsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutCashClosingsInput, UserUncheckedUpdateWithoutCashClosingsInput>
+  }
+
+  export type UserUpdateWithoutCashClosingsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    packageStocks?: PackageStockUpdateManyWithoutCreatedByUserNestedInput
+    inventoryMovements?: InventoryMovementUpdateManyWithoutCreatedByUserNestedInput
+    salesCreated?: SaleUpdateManyWithoutCreatedByUserNestedInput
+    salesCancelled?: SaleUpdateManyWithoutCancelledByUserNestedInput
+    paymentsCreated?: PaymentUpdateManyWithoutCreatedByUserNestedInput
+    paymentsReversed?: PaymentUpdateManyWithoutReversedByUserNestedInput
+    linePaymentsCreated?: LinePaymentUpdateManyWithoutCreatedByUserNestedInput
+    linePaymentsReversed?: LinePaymentUpdateManyWithoutReversedByUserNestedInput
+    expensesCreated?: ExpenseUpdateManyWithoutCreatedByUserNestedInput
+    expensesReversed?: ExpenseUpdateManyWithoutReversedByUserNestedInput
+    ownerWithdrawalsCreated?: OwnerWithdrawalUpdateManyWithoutCreatedByUserNestedInput
+    ownerWithdrawalsReversed?: OwnerWithdrawalUpdateManyWithoutReversedByUserNestedInput
+    cashMovements?: CashMovementUpdateManyWithoutCreatedByUserNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
+    backups?: BackupUpdateManyWithoutCreatedByUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutCashClosingsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    packageStocks?: PackageStockUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    inventoryMovements?: InventoryMovementUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    salesCreated?: SaleUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    salesCancelled?: SaleUncheckedUpdateManyWithoutCancelledByUserNestedInput
+    paymentsCreated?: PaymentUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    paymentsReversed?: PaymentUncheckedUpdateManyWithoutReversedByUserNestedInput
+    linePaymentsCreated?: LinePaymentUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    linePaymentsReversed?: LinePaymentUncheckedUpdateManyWithoutReversedByUserNestedInput
+    expensesCreated?: ExpenseUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    expensesReversed?: ExpenseUncheckedUpdateManyWithoutReversedByUserNestedInput
+    ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedUpdateManyWithoutReversedByUserNestedInput
+    cashMovements?: CashMovementUncheckedUpdateManyWithoutCreatedByUserNestedInput
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     backups?: BackupUncheckedUpdateManyWithoutCreatedByUserNestedInput
   }
@@ -33276,6 +35200,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingCreateNestedManyWithoutClosedByUserInput
     backups?: BackupCreateNestedManyWithoutCreatedByUserInput
   }
 
@@ -33299,6 +35224,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementUncheckedCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingUncheckedCreateNestedManyWithoutClosedByUserInput
     backups?: BackupUncheckedCreateNestedManyWithoutCreatedByUserInput
   }
 
@@ -33338,6 +35264,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUpdateManyWithoutClosedByUserNestedInput
     backups?: BackupUpdateManyWithoutCreatedByUserNestedInput
   }
 
@@ -33361,6 +35288,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUncheckedUpdateManyWithoutClosedByUserNestedInput
     backups?: BackupUncheckedUpdateManyWithoutCreatedByUserNestedInput
   }
 
@@ -33384,6 +35312,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
   }
 
@@ -33407,6 +35336,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedCreateNestedManyWithoutCreatedByUserInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedCreateNestedManyWithoutReversedByUserInput
     cashMovements?: CashMovementUncheckedCreateNestedManyWithoutCreatedByUserInput
+    cashClosings?: CashClosingUncheckedCreateNestedManyWithoutClosedByUserInput
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -33446,6 +35376,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
   }
 
@@ -33469,6 +35400,7 @@ export namespace Prisma {
     ownerWithdrawalsCreated?: OwnerWithdrawalUncheckedUpdateManyWithoutCreatedByUserNestedInput
     ownerWithdrawalsReversed?: OwnerWithdrawalUncheckedUpdateManyWithoutReversedByUserNestedInput
     cashMovements?: CashMovementUncheckedUpdateManyWithoutCreatedByUserNestedInput
+    cashClosings?: CashClosingUncheckedUpdateManyWithoutClosedByUserNestedInput
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -33643,6 +35575,20 @@ export namespace Prisma {
     description?: string | null
     movementDate?: Date | string
     createdAt?: Date | string
+  }
+
+  export type CashClosingCreateManyClosedByUserInput = {
+    id?: string
+    closingDate: Date | string
+    openingBalance: Decimal | DecimalJsLike | number | string
+    totalIn: Decimal | DecimalJsLike | number | string
+    totalOut: Decimal | DecimalJsLike | number | string
+    ownerWithdrawals: Decimal | DecimalJsLike | number | string
+    expectedBalance: Decimal | DecimalJsLike | number | string
+    actualBalance: Decimal | DecimalJsLike | number | string
+    difference: Decimal | DecimalJsLike | number | string
+    notes?: string | null
+    closedAt?: Date | string
   }
 
   export type AuditLogCreateManyUserInput = {
@@ -34194,6 +36140,48 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     movementDate?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CashClosingUpdateWithoutClosedByUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    closingDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    openingBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalIn?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalOut?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerWithdrawals?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    expectedBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    actualBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    difference?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    closedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CashClosingUncheckedUpdateWithoutClosedByUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    closingDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    openingBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalIn?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalOut?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerWithdrawals?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    expectedBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    actualBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    difference?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    closedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CashClosingUncheckedUpdateManyWithoutClosedByUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    closingDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    openingBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalIn?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalOut?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerWithdrawals?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    expectedBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    actualBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    difference?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    closedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AuditLogUpdateWithoutUserInput = {

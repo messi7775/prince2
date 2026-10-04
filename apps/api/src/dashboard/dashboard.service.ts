@@ -319,7 +319,7 @@ export class DashboardService {
 
     const growth = (cur: Prisma.Decimal, prev: Prisma.Decimal): number | null => {
       if (prev.isZero()) return null;
-      return Number(cur.minus(prev).div(prev).times(100).toDecimal(2).toString());
+      return Number(cur.minus(prev).div(prev).times(100).toFixed(2));
     };
 
     return {

@@ -507,7 +507,7 @@ export class ReportsService {
       sales.isZero()
         ? 0
         : Number(
-            value.div(sales).times(100).toDecimal(2).toString(),
+            value.div(sales).times(100).toFixed(2),
           );
 
     return {

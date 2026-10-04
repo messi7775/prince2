@@ -300,6 +300,21 @@ exports.Prisma.CashMovementScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.CashClosingScalarFieldEnum = {
+  id: 'id',
+  closingDate: 'closingDate',
+  openingBalance: 'openingBalance',
+  totalIn: 'totalIn',
+  totalOut: 'totalOut',
+  ownerWithdrawals: 'ownerWithdrawals',
+  expectedBalance: 'expectedBalance',
+  actualBalance: 'actualBalance',
+  difference: 'difference',
+  notes: 'notes',
+  closedBy: 'closedBy',
+  closedAt: 'closedAt'
+};
+
 exports.Prisma.AuditLogScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -461,6 +476,7 @@ exports.AuditAction = exports.$Enums.AuditAction = {
   OWNER_WITHDRAWAL_REVERSED: 'OWNER_WITHDRAWAL_REVERSED',
   CASH_MANUAL_IN: 'CASH_MANUAL_IN',
   CASH_MANUAL_OUT: 'CASH_MANUAL_OUT',
+  CASH_CLOSING_CREATED: 'CASH_CLOSING_CREATED',
   BACKUP_CREATED: 'BACKUP_CREATED',
   BACKUP_RESTORED: 'BACKUP_RESTORED',
   BACKUP_EXPORTED: 'BACKUP_EXPORTED',
@@ -485,6 +501,7 @@ exports.Prisma.ModelName = {
   Expense: 'Expense',
   OwnerWithdrawal: 'OwnerWithdrawal',
   CashMovement: 'CashMovement',
+  CashClosing: 'CashClosing',
   AuditLog: 'AuditLog',
   Backup: 'Backup',
   Settings: 'Settings'
