@@ -94,7 +94,7 @@ export function RestoreBackupDialog({
             <div className="rounded-md bg-muted/50 p-3 space-y-1 text-sm" >
                 <div className="flex justify-between gap-3" >
                     <span className="text-muted-foreground" > الملف: </span>
-                        < span className = "font-medium truncate text-end" >
+                        < span dir="ltr" className = "font-medium truncate text-end ltr" >
                         { backup.fileName }
                             </span>
                             </div>

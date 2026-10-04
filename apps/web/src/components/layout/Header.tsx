@@ -63,7 +63,7 @@ export function Header({ onMenuClick }: HeaderProps) {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium">
+                  <span dir="ltr" className="text-sm font-medium ltr">
                     {user?.email ?? 'مستخدم'}
                   </span>
                 </div>

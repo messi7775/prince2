@@ -84,7 +84,7 @@ export function DeleteBackupDialog({
                             <span className="text-muted-foreground">
                                 الملف:
                             </span>
-                            <span className="font-medium truncate text-end">
+                            <span dir="ltr" className="font-medium truncate text-end ltr">
                                 {backup.fileName}
                             </span>
                         </div>

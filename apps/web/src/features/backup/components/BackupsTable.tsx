@@ -68,7 +68,7 @@ export function BackupsTable({
                             <TableCell className="text-sm font-medium">
                                 <div className="flex items-center gap-2">
                                     <Database className="h-4 w-4 text-muted-foreground shrink-0" />
-                                    <span className="sm:truncate sm:max-w-[280px] break-words">
+                                    <span dir="ltr" className="sm:truncate sm:max-w-[280px] break-words ltr">
                                         {backup.fileName}
                                     </span>
                                 </div>

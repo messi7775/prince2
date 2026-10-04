@@ -67,6 +67,7 @@ export function LoginForm() {
         <Input
           id="email"
           type="email"
+          dir="ltr"
           autoComplete="username"
           autoFocus
           placeholder="admin@prince-net.local"

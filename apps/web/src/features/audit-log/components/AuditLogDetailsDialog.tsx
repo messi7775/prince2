@@ -37,7 +37,7 @@ function MetaItem({ icon: Icon, label, value, mono = false, copyable = false }: 
     <div className="rounded-lg border bg-muted/20 p-3">
       <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground"><Icon className="h-3.5 w-3.5" />{label}</div>
       <div className={`flex items-center justify-between gap-2 text-sm font-medium ${mono ? 'break-all font-mono text-xs' : ''}`}>
-        <span>{value || '—'}</span>
+        <span dir="ltr" className="ltr">{value || '—'}</span>
         {copyable && value && value !== '—' ? <CopyButton value={value} /> : null}
       </div>
     </div>

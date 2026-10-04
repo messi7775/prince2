@@ -129,6 +129,13 @@
     text-align: end;
   }
 
+  /* LTR isolation for Latin content inside RTL context
+     (emails, UUIDs, file names, codes, URLs) */
+  .ltr {
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+
   /* Hide scrollbar utility for horizontal scroll areas */
   .scrollbar-hide {
     -ms-overflow-style: none;

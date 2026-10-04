@@ -31,7 +31,7 @@ export function ActivityTimeline({ entityType, entityId, userId, title = 'الت
           <ol className="space-y-3 border-s ps-4">
             {query.data?.data.map((log) => <li key={log.id} className="space-y-1 text-sm">
               <p className="font-medium">{getAuditActionLabel(log.action)}</p>
-              <p className="break-words text-xs text-muted-foreground">{log.userEmail} · {formatDateTime(log.createdAt)}</p>
+              <p className="break-words text-xs text-muted-foreground"><span dir="ltr" className="ltr">{log.userEmail}</span> · {formatDateTime(log.createdAt)}</p>
               <p className="text-xs text-muted-foreground">{log.entityType}</p>
             </li>)}
           </ol>
