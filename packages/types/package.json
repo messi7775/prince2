@@ -19,6 +19,6 @@
     "test": "echo \"no tests for types\""
   },
   "devDependencies": {
-    "typescript": "^5.5.4"
+    "typescript": "^5.9.3"
   }
 }

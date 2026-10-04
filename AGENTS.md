@@ -19,6 +19,10 @@ The web app uses a relative `/api/v1` base URL, so all API calls go through the 
 
 ## Key Setup Details
 
+**Stack versions (Oct 2026 maintenance pass):** NestJS 11 (Express 5, `@types/express` 5), Prisma 6.19, TypeScript 5.9, Vite 7 + `@vitejs/plugin-react` 5, React 18, Tailwind 3, ESLint 8. Deliberately NOT upgraded (breaking): Prisma 7, Tailwind 4, ESLint 9+, React 19, zod 4, react-router 7.
+
+**Running pnpm inside the container:** use `CI=true` (non-TTY, allows module purge) — the store lives at `/app/.pnpm-store/v11`. After dependency changes run `pnpm install` in one container, then `docker compose restart api web`.
+
 - **Shared packages must be built** (`pnpm build:packages`) before the API or seed can use them — they're CJS packages consumed via `workspace:*` symlinks.
 - **Prisma client must be generated** (`pnpm prisma:generate`) on each startup — the generated client lives in `apps/api/src/generated/prisma` which is on the bind mount.
 - The `migrate` service runs `pnpm build:packages && pnpm prisma:generate && pnpm prisma:deploy && pnpm prisma:seed` — this ordering is required (seed imports from built packages + generated Prisma client).

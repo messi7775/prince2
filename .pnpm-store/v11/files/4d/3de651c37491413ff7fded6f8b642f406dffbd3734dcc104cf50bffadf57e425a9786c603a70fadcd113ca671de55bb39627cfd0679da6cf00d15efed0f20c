@@ -1,0 +1,36 @@
+/**
+ * Text Clip Renderer
+ *
+ * Implements `background-clip: text` — paints the element's background
+ * (color + images) to an offscreen canvas and clips it to the text glyph
+ * shapes with destination-in compositing, then composites the result back
+ * onto the main canvas.
+ *
+ * Extracted from CanvasRenderer to keep paint orchestration separate from
+ * this self-contained compositing algorithm.
+ *
+ * The offscreen canvas uses CSS-pixel dimensions (not device-pixel) because the
+ * background renderer handles scaling internally via BackgroundRenderer options.
+ */
+import { ElementPaint } from '../stacking-context';
+import { CSSParsedDeclaration } from '../../css';
+import { Context } from '../../core/context';
+export interface TextClipRendererDependencies {
+    /** Main canvas context the clipped background is composited onto. */
+    ctx: CanvasRenderingContext2D;
+    context: Context;
+    /** Font builder shared with the text renderer so both use identical fonts. */
+    createFontStyle: (styles: CSSParsedDeclaration) => string[];
+}
+export declare class TextClipRenderer {
+    private readonly ctx;
+    private readonly context;
+    private readonly createFontStyle;
+    constructor(deps: TextClipRendererDependencies);
+    render(paint: ElementPaint): Promise<void>;
+    /**
+     * Render text glyphs one-by-one as a mask, applying letter-spacing between characters.
+     * This ensures the mask matches how the text renderer lays out the characters.
+     */
+    private renderTextMaskWithLetterSpacing;
+}
