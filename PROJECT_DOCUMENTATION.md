@@ -38,6 +38,7 @@
 28. [إنشاء نسخة جديدة من المشروع بقاعدة فارغة](#28-إنشاء-نسخة-جديدة-من-المشروع-بقاعدة-فارغة)
 29. [Deployment / Production](#29-deployment--production)
 30. [Security — إعدادات الأمان الحالية](#30-security--إعدادات-الأمان-الحالية)
+31. [Final Verification — تقرير التحقق النهائي (2026-10-04)](#31-final-verification--تقرير-التحقق-النهائي-2026-10-04)
 31. [Troubleshooting — المشاكل الشائعة وحلولها](#31-troubleshooting--المشاكل-الشائعة-وحلولها)
 32. [Maintenance — تحديث المشروع مستقبلًا بأمان](#32-maintenance--تحديث-المشروع-مستقبلًا-بأمان)
 
@@ -930,6 +931,31 @@ LEFT JOIN inventory_movements im ON im.package_stock_id = ps.id
 GROUP BY pkg.name
 ORDER BY current_stock;
 
+-- 7b) اتساق تخصيص FIFO لكل فاتورة/باقة
+--     (مهم: SELL بحركة سالبة، RETURN بحركة موجبة — الاثنتان reference_type='Sale')
+--     المستهلك الصافي = -(مجموع DELTA لكل حركات SELL + RETURN) للفاتورة/الباقة
+--     النتيجة المتوقعة: 0 صفوف
+WITH alloc AS (
+  SELECT im.reference_id AS sale_id, ps.package_id,
+    -SUM(im.quantity_delta) AS net_consumed
+  FROM inventory_movements im
+  JOIN package_stocks ps ON ps.id = im.package_stock_id
+  WHERE im.reference_type = 'Sale' AND im.type IN ('SELL','RETURN')
+  GROUP BY 1, 2
+)
+SELECT si.sale_id, si.package_id, si.quantity AS item_qty,
+       COALESCE(a.net_consumed, 0) AS allocated
+FROM sale_items si
+JOIN sales s ON s.id = si.sale_id
+LEFT JOIN alloc a ON a.sale_id = si.sale_id AND a.package_id = si.package_id
+WHERE si.quantity <> COALESCE(a.net_consumed, 0);
+
+-- 7c) دفعات/مصروفات معكوسة بدون حركة نقدية عكسية مقابلة
+SELECT COUNT(*) FROM expenses e
+WHERE e.status = 'REVERSED' AND NOT EXISTS (
+  SELECT 1 FROM cash_movements cm
+  WHERE cm.source_type = 'EXPENSE_REVERSAL' AND cm.source_id = e.id);
+
 -- 7) عدد السجلات في كل الجداول (لمقارنة النسخ الاحتياطية)
 SELECT 'users' t, COUNT(*) FROM users UNION ALL
 SELECT 'packages', COUNT(*) FROM packages UNION ALL
@@ -954,8 +980,8 @@ SELECT 'audit_logs', COUNT(*) FROM audit_logs;
 
 (التنفيذ: `apps/api/src/backups/backups.service.ts` — الواجهة: `/backup`)
 
-- **الصيغة:** JSON snapshot (إصدار `SNAPSHOT_VERSION = 1`) لكل بيانات الأعمال، يُخزَّن كملف في `BACKUP_DIR` (مسار مطلق إلزامي) ويسجَّل في جدول `backups` (اسم الملف، المسار، الحجم `size_bytes`، عدد السجلات `record_count`، checksum).
-- **الجداول المنسوخة** (بالترتيب `INSERT_ORDER` — الأب قبل الابن لتبعيات FK): `packages, distributors, settings, packageStocks, sales, saleItems, payments, lines, linePayments, expenseCategories, expenses, ownerWithdrawals, inventoryMovements, cashMovements, auditLogs`.
+- **الصيغة:** JSON snapshot (إصدار `SNAPSHOT_VERSION = 2`) لكل بيانات الأعمال، يُخزَّن كملف في `BACKUP_DIR` (مسار مطلق إلزامي) ويسجَّل في جدول `backups` (اسم الملف، المسار، الحجم `size_bytes`، عدد السجلات `record_count`، checksum SHA-256).
+- **الجداول المنسوخة** (بالترتيب `INSERT_ORDER` — الأب قبل الابن لتبعيات FK): `packages, distributors, settings, packageStocks, sales, saleItems, payments, lines, linePayments, expenseCategories, expenses, ownerWithdrawals, inventoryMovements, cashMovements, cashClosings, auditLogs` — **بما فيها `cash_closings` (الإغلاقات اليومية)** إضافة إلى `users` (تُدمج بـ upsert عند الاستعادة).
 - **عند الاستعادة:**
   1. تُحذف بيانات الجداول بالترتيب العكسي (`WIPE_ORDER` — الابن قبل الأب).
   2. يُعاد إدراج كل شيء من الـ snapshot.
@@ -963,7 +989,8 @@ SELECT 'audit_logs', COUNT(*) FROM audit_logs;
   4. **جدول `users` يُدمج بـ upsert (لا يُحذف)** — لأنه مرجع FK لـ backups ولأن جلسة المستخدم الحالي يجب أن تبقى صالحة بعد الاستعادة.
 - **العمليات:** إنشاء نسخة (`POST /backups`)، تنزيل (`GET /backups/:id/download`)، استعادة (`POST /backups/:id/restore`)، حذف نسخة (`DELETE /backups/:id`)، حذف الكل (`DELETE /backups`).
 - **التدقيق:** BACKUP_CREATED / BACKUP_RESTORED / BACKUP_EXPORTED / BACKUP_DELETED / BACKUPS_PURGED.
-- **نسخة أسبوعية تلقائية:** مجدول `apps/api/src/scheduler/` (`@nestjs/schedule`) ينشئ نسخة كاملة تلقائيًا **كل يوم جمعة 00:00 UTC** (cron `0 0 * * 5`, timeZone `UTC`) وتُنسب إلى أقدم مستخدم (الأدمن). أي فشل يُسجَّل في logs ولا يوقف التطبيق.
+- **نسخة أسبوعية تلقائية:** مجدول `apps/api/src/scheduler/` (`@nestjs/schedule`) ينشئ نسخة كاملة تلقائيًا **كل يوم جمعة 00:00 UTC** (cron `0 0 * * 5`, timeZone `UTC` — في cron رقم 5 = الجمعة؛ تم التحقق عمليًا: أول تشغيل قادم 2026-10-09T00:00:00Z) وتُنسب إلى أقدم مستخدم (الأدمن). أي فشل يُسجَّل في logs ولا يوقف التطبيق.
+  - **إذا كانت واجهة API متوقفة وقت التشغيل (الجمعة 00:00 UTC):** المهمة تُقفز بالكامل — لا يوجد تعويض/إعادة تشغيل لاحقة (النسخة التالية هي الجمعة التالية). الحل اليدوي: زر إنشاء نسخة من صفحة `/backup`. (سلوك مقصود — لم يُضف نظام تعويض لأنه غير ضروري).
 - **تذكير الإغلاق الشهري:** سياسة الشهر = تذكير فقط (لا قفل ولا إغلاق تلقائي). طالما أن **آخر يوم من الشهر الماضي بدون إغلاق صندوق**، يظهر تنبيه `MONTHLY_CLOSING_REMINDER` في مركز التنبيهات (يُحسب عند الطلب — بدون تخزين)، ويختفي تلقائيًا بمجرد إغلاق ذلك اليوم يدويًا من `/cash`. (التنفيذ: `apps/api/src/notifications/notifications.service.ts`).
 - **في بيئة Base44:** `BACKUP_DIR=/tmp/prince-net-backups` وهو volume باسم `backups` مُلحق بحاوية API (يستمر بين إعادة التشغيل).
 - **حدود:** هذا النظام ينسخ **بيانات الأعمال** من/إلى نفس التطبيق — لا يُغني عن `pg_dump` الخارجي (الذي ينسخ أيضًا البنية ويصلح للنقل بين خوادم).
@@ -1391,6 +1418,48 @@ pnpm prisma:generate && pnpm typecheck && pnpm test
 - **نسخ احتياطي قبل أي صيانة كبيرة:** `pg_dump` كامل (§16) + نسخة داخلية من `/backup`.
 - بعد أي تعديل schema شغّل فحوص سلامة §18.
 - حدّث هذا الملف (و`AGENTS.md`) عند أي تغيير بنيوي.
+
+---
+
+## 31. Final Verification — تقرير التحقق النهائي (2026-10-04)
+
+تحقق شامل للنظام بعد اكتمال جميع الميزات. النتائج الفعلية:
+
+### فحوص البناء والجودة
+| الفحص | النتيجة |
+|---|---|
+| `pnpm build` (packages + api + web) | ✅ نجح (web: تحذير حجم chunks فقط — غير مؤثر) |
+| `pnpm typecheck` | ✅ نجح |
+| `pnpm lint` (api + web) | ✅ نجح بعد إزالة استيراد `dateBoundary` غير المستخدم من `distributors.service.ts` (الإصلاح الوحيد الضروري) |
+| `pnpm test` | ✅ نجاح (لا اختبارات مكتوبة — `--passWithNoTests`) |
+| API health `/api/v1/health` | ✅ `{"status":"ok","database":"ok"}` |
+| CSRF `GET /api/v1/auth/csrf` | ✅ يُصدر token |
+| Prisma migrate status | ✅ 6 migrations — "Database schema is up to date!" |
+
+### فحوص سلامة البيانات (كلها ✅)
+- **اتساق الفواتير مع البنود:** 0 تعارض (SUM(total_price) = total_amount لكل فاتورة).
+- **Overpayment:** 0 دفعة تتجاوز فاتورتها.
+- **رصيد الصندوق:** IN 101,000 − OUT 64,600 = **36,400** (متسق مع cash_movements).
+- **FIFO:** 0 تعارض — المستهلك الصافي لكل فاتورة/باقة = كمية البند (SELL سالب + RETURN موجب، الاستعلام 7b أعلاه).
+- **المخزون:** 0 باقة برصيد سالب (من الـ ledger).
+- **أرصدة الموزعين:** متسقة (مطيع الصايدي 11,000 / Mohammed Fahid 15,000 = مبيعات نشطة − مدفوعات نشطة).
+- **العكس (REVERSED):** كل مصروف معكوس له حركة نقدية عكسية مقابلة، وكل دفعة معكوسة لها حركة عكسية، وأكشنات التدقيق (REVERSED/CANCELLED) موجودة.
+- **سجلات التدقيق:** كل سجل مرتبط بمستخدم موجود؛ لا مراجع مكسورة.
+- **الربحية:** التقرير يعمل ويحسب (مبيعات 124,000، COGS 124,000، مصروفات 1,100، تكاليف خطوط 60,200، صافي −61,300 — بيانات اختبار حيث سعر البيع = سعر التكلفة، فالهامش 0 بالبيانات لا بالكود).
+
+### النسخ الاحتياطي (مختبَر فعليًا بالخدمة الحقيقية ✅)
+- **الإنشاء:** نسخة جديدة بنجاح — 127 سجلًا، الإصدار 2، checksum SHA-256.
+- **الشمول:** الـ snapshot يشمل **cash_closings** و16 جدول أعمال + `users`؛ تطابقت أعداد سجلات كل جدول مع القاعدة (الاستثناء الوحيد المتوقع: `audit_logs` — سجل BACKUP_CREATED الخاص بالنسخة نفسها يُكتب بعد الـ snapshot فلا يمكن أن يشمل نفسه).
+- **المراجع:** فحص FK داخل الـ snapshot (saleItems→sales، packageStocks→packages، inventoryMovements→packageStocks، cashClosings→users): 0 مرجع مكسور.
+- **الاستعادة:** نجحت بالكامل (transaction واحدة) — أعداد الجداول قبل/بعد متطابقة، والفرقان الوحيدان المتوقعان: +1 سجل تدقيق (BACKUP_RESTORED) و+1 صف في `backups` (النسخة الجديدة نفسها — الجدول لا يُمسح عمدًا).
+
+### المجدول والتذكير الشهري
+- **`0 0 * * 5` = الجمعة 00:00 UTC** (تم التحقق بمكتبة cron نفسها: أول تشغيل قادم 2026-10-09T00:00Z، واليوم = Friday). timeZone `UTC` مثبت في الكود.
+- **سلوك توقف API وقت التشغيل:** المهمة تُقفز بالكامل بدون تعويض (التفاصيل في §19) — لم يُضف نظام جديد لأنه غير ضروري.
+- **تذكير الإغلاق الشهري (مختبَر فعليًا ✅):** ظهر لأن 2026-09-30 (آخر يوم سبتمبر) بدون إغلاق → اختفى فور إنشاء إغلاق تجريبي لذلك اليوم → عاد بعد حذف الإغلاق التجريبي. يظهر في مركز التنبيهات بنوع `MONTHLY_CLOSING_REMINDER` فقط، ولا يُخزن شيء.
+
+### لم يُختبر
+- **اختبار الواجهة بصريًا:** لم يكن متاحًا وقت التحقق (تبويب المعاينة لا يستجيب) — تم التحقق من التذكير والتقارير والنسخ/الاستعادة عبر تشغيل كود الخدمات الفعلي (`.dev-dist`) مباشرة على قاعدة البيانات الحقيقية بدلًا من الواجهة.
 
 ---
 
