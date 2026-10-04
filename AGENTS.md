@@ -14,7 +14,8 @@ The web app uses a relative `/api/v1` base URL, so all API calls go through the 
 
 - `db` — PostgreSQL 16
 - `migrate` — one-shot: builds packages, generates Prisma client, applies migrations, seeds. Must complete before API starts.
-- `api` — NestJS dev (`nest start --watch`), depends on `migrate` completing
+- `api` — NestJS dev (`nest start --watch --path tsconfig.dev.json`), depends on `migrate` completing
+- API watch output is isolated in `apps/api/.dev-dist`; normal `nest build` uses `dist`. Do not share these directories: a concurrent build cleans `dist` while the watcher restarts, which can leave the watcher alive but the API child dead (`Cannot find module dist/main`). Verify both a cold restart and a normal API build while watch is running, then confirm `/api/v1/health` and Compose health remain healthy.
 - `web` — Vite dev, depends on `api` being healthy
 
 ## Key Setup Details

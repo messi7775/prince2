@@ -6,7 +6,7 @@
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
   "scripts": {
-    "dev": "nest start --watch",
+    "dev": "nest start --watch --path tsconfig.dev.json",
     "build": "nest build",
     "start": "nest start",
     "start:prod": "node dist/main.js",
