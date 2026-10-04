@@ -46,3 +46,6 @@ The web app uses a relative `/api/v1` base URL, so all API calls go through the 
 - Web: `curl -sf http://localhost:3000` returns Vite-served HTML
 - API health: `curl -sf http://localhost:3000/api/v1/health` → `{"status":"ok","database":"ok"}`
 - CSRF: `curl -sf http://localhost:3000/api/v1/auth/csrf` returns a token
+- DB consistency (sale totals) — run via psql in the `db` service. The amount column is `total_price` (there is no `line_total`):
+  `SELECT s.id FROM sales s JOIN sale_items si ON si.sale_id = s.id GROUP BY s.id, s.total_amount HAVING SUM(si.total_price) <> s.total_amount;`
+- Shadow DB `prince_net_shadow` exists in the `db` service (used by `prisma migrate dev`/`diff` verification runs). If missing: `CREATE DATABASE prince_net_shadow;` as user `prince_net`.
