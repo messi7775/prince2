@@ -1,6 +1,10 @@
 import { apiClient } from '../../../lib/api-client';
-import type { DashboardData } from '@prince-net/types';
+import type { DashboardData, DashboardPeriod } from '@prince-net/types';
 
-export async function fetchDashboard(): Promise<DashboardData> {
-  return apiClient.get<DashboardData>('/dashboard');
+export async function fetchDashboard(
+  period: DashboardPeriod = 'today',
+): Promise<DashboardData> {
+  return apiClient.get<DashboardData>('/dashboard', {
+    query: { period },
+  });
 }

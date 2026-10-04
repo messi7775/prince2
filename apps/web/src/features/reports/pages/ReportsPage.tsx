@@ -14,6 +14,7 @@ import { SalesReportTab } from '../components/SalesReportTab';
 import { CashReportTab } from '../components/CashReportTab';
 import { InventoryReportTab } from '../components/InventoryReportTab';
 import { DistributorsReportTab } from '../components/DistributorsReportTab';
+import { ProfitabilityReportTab } from '../components/ProfitabilityReportTab';
 import { ExpensesReportTab } from '../components/ExpensesReportTab';
 import { LinesReportTab } from '../components/LinesReportTab';
 import { CollectionsReportTab } from '../components/CollectionsReportTab';
@@ -78,6 +79,7 @@ export function ReportsPage() {
           <TabsTrigger value="collections">التحصيلات</TabsTrigger>
           <TabsTrigger value="cash">الصندوق</TabsTrigger>
           <TabsTrigger value="inventory">المخزون</TabsTrigger>
+          <TabsTrigger value="profitability">الأرباح</TabsTrigger>
           <TabsTrigger value="distributors">الموزعون</TabsTrigger>
           <TabsTrigger value="expenses">المصروفات</TabsTrigger>
           <TabsTrigger value="owner-withdrawals">سحوبات المالك</TabsTrigger>
@@ -98,6 +100,10 @@ export function ReportsPage() {
 
         <TabsContent value="inventory">
           <InventoryReportTab dateFrom={dateFrom} dateTo={dateTo} />
+        </TabsContent>
+
+        <TabsContent value="profitability">
+          <ProfitabilityReportTab dateFrom={dateFrom} dateTo={dateTo} />
         </TabsContent>
 
         <TabsContent value="distributors">

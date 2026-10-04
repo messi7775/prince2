@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Banknote,
   CreditCard,
@@ -6,6 +7,9 @@ import {
   Users,
   Wallet,
 } from 'lucide-react';
+import type { DashboardPeriod } from '@prince-net/types';
+import { PeriodStats } from '../components/PeriodStats';
+import { SalesSeriesChart } from '../components/SalesSeriesChart';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
@@ -19,7 +23,8 @@ import { useDashboard } from '../hooks/useDashboard';
 import { formatMoney } from '../../../lib/currency';
 
 export function DashboardPage() {
-  const { data, isLoading, isError, error, refetch } = useDashboard();
+  const [period, setPeriod] = useState<DashboardPeriod>('today');
+  const { data, isLoading, isError, error, refetch } = useDashboard(period);
 
   if (isLoading) {
     return <LoadingState message="جارٍ تحميل لوحة التحكم..." />;
@@ -80,6 +85,16 @@ export function DashboardPage() {
           variant="warning"
         />
       </div>
+
+      {/* Period analysis + comparison */}
+      <PeriodStats
+        period={period}
+        onPeriodChange={setPeriod}
+        stats={data.periodStats}
+      />
+
+      {/* 14-day series chart */}
+      <SalesSeriesChart data={data.series} />
 
       {/* Financial summary */}
       <FinancialSummary data={data.financialSummary} />

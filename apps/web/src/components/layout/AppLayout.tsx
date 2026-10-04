@@ -4,9 +4,11 @@ import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { MobileDrawer } from './MobileDrawer';
 import { LowStockBanner } from './LowStockBanner';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 export function AppLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  useKeyboardShortcuts();
 
   return (
     <div className="min-h-dvh bg-background">

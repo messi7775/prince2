@@ -47,6 +47,7 @@ import {
 } from '../hooks/useDistributorStatus';
 import { DistributorFormDialog } from '../components/DistributorFormDialog';
 import { RegisterPaymentDialog } from '../components/RegisterPaymentDialog';
+import { DistributorStatementTab } from '../components/DistributorStatementTab';
 import { EditPaymentDialog } from '../../payments/components/EditPaymentDialog';
 import { ReversePaymentDialog } from '../../payments/components/ReversePaymentDialog';
 import { useUpdatePayment } from '../../payments/hooks/useUpdatePayment';
@@ -248,6 +249,7 @@ export function DistributorDetailsPage() {
         <TabsList>
           <TabsTrigger value="sales">المبيعات</TabsTrigger>
           <TabsTrigger value="payments">التحصيلات</TabsTrigger>
+          <TabsTrigger value="statement">كشف الحساب</TabsTrigger>
         </TabsList>
 
         {balanceQuery.data && balanceQuery.data.balance !== '0.00' && balanceQuery.data.balance !== '0' && (
@@ -423,6 +425,13 @@ export function DistributorDetailsPage() {
               )}
             </>
           )}
+        </TabsContent>
+
+        <TabsContent value="statement" className="space-y-4">
+          <DistributorStatementTab
+            distributorId={d.id}
+            distributorName={d.name}
+          />
         </TabsContent>
       </Tabs>
 

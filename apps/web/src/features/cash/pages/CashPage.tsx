@@ -5,9 +5,17 @@ import { PageHeader } from '../../../components/layout/PageHeader';
 import { Button } from '../../../components/ui/button';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '../../../components/ui/tabs';
 import { StatCard } from '../../dashboard/components/StatCard';
 import { CashMovementsFilters } from '../components/CashMovementsFilters';
 import { CashMovementsTable } from '../components/CashMovementsTable';
+import { CashLedgerTab } from '../components/CashLedgerTab';
+import { CashClosingsTab } from '../components/CashClosingsTab';
 import { ManualCashInDialog } from '../components/ManualCashInDialog';
 import { ManualCashOutDialog } from '../components/ManualCashOutDialog';
 import { useCashBalance } from '../hooks/useCashBalance';
@@ -40,7 +48,7 @@ export function CashPage() {
     <div className="space-y-6">
       <PageHeader
         title="الصندوق"
-        description="إدارة حركة النقد"
+        description="إدارة حركة النقد والدفتر المالي والإغلاق اليومي"
         actions={
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button onClick={() => setManualInOpen(true)} className="flex-1 sm:flex-none">
@@ -94,51 +102,67 @@ export function CashPage() {
         </div>
       )}
 
-      {/* Filters */}
-      <CashMovementsFilters
-        direction={direction}
-        onDirectionChange={(v) => {
-          setDirection(v);
-          setPage(1);
-        }}
-        sourceType={sourceType}
-        onSourceTypeChange={(v) => {
-          setSourceType(v);
-          setPage(1);
-        }}
-        dateFrom={dateFrom}
-        onDateFromChange={(v) => {
-          setDateFrom(v);
-          setPage(1);
-        }}
-        dateTo={dateTo}
-        onDateToChange={(v) => {
-          setDateTo(v);
-          setPage(1);
-        }}
-      />
+      <Tabs defaultValue="movements" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="movements">الحركات</TabsTrigger>
+          <TabsTrigger value="ledger">الدفتر الموحد</TabsTrigger>
+          <TabsTrigger value="closings">إغلاق الصندوق</TabsTrigger>
+        </TabsList>
 
-      {/* Movements */}
-      {movementsQuery.isLoading ? (
-        <LoadingState />
-      ) : movementsQuery.isError || !movementsQuery.data ? (
-        <ErrorState
-          title="تعذّر تحميل الحركات"
-          message={
-            movementsQuery.error instanceof Error
-              ? movementsQuery.error.message
-              : 'حدث خطأ'
-          }
-          onRetry={() => movementsQuery.refetch()}
-        />
-      ) : (
-        <CashMovementsTable
-          data={movementsQuery.data.data}
-          page={page}
-          totalPages={movementsQuery.data.meta.totalPages}
-          onPageChange={setPage}
-        />
-      )}
+        <TabsContent value="movements" className="space-y-4">
+          <CashMovementsFilters
+            direction={direction}
+            onDirectionChange={(v) => {
+              setDirection(v);
+              setPage(1);
+            }}
+            sourceType={sourceType}
+            onSourceTypeChange={(v) => {
+              setSourceType(v);
+              setPage(1);
+            }}
+            dateFrom={dateFrom}
+            onDateFromChange={(v) => {
+              setDateFrom(v);
+              setPage(1);
+            }}
+            dateTo={dateTo}
+            onDateToChange={(v) => {
+              setDateTo(v);
+              setPage(1);
+            }}
+          />
+
+          {movementsQuery.isLoading ? (
+            <LoadingState />
+          ) : movementsQuery.isError || !movementsQuery.data ? (
+            <ErrorState
+              title="تعذّر تحميل الحركات"
+              message={
+                movementsQuery.error instanceof Error
+                  ? movementsQuery.error.message
+                  : 'حدث خطأ'
+              }
+              onRetry={() => movementsQuery.refetch()}
+            />
+          ) : (
+            <CashMovementsTable
+              data={movementsQuery.data.data}
+              page={page}
+              totalPages={movementsQuery.data.meta.totalPages}
+              onPageChange={setPage}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="ledger" className="space-y-4">
+          <CashLedgerTab />
+        </TabsContent>
+
+        <TabsContent value="closings" className="space-y-4">
+          <CashClosingsTab />
+        </TabsContent>
+      </Tabs>
 
       {/* Dialogs */}
       <ManualCashInDialog

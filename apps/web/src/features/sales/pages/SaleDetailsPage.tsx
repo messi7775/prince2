@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
     AlertTriangle,
     ArrowRight,
     Banknote,
+    Copy,
     CreditCard,
     Pencil,
     Plus,
@@ -37,6 +38,7 @@ import {
 import { useToast } from '../../../components/ui/use-toast';
 import { useSale } from '../hooks/useSale';
 import { useCancelSale } from '../hooks/useCancelSale';
+import { useDuplicateSale } from '../hooks/useDuplicateSale';
 import { CancelSaleDialog } from '../components/CancelSaleDialog';
 import { EditSaleDialog } from '../components/EditSaleDialog';
 import { usePayments } from '../../payments/hooks/usePayments';
@@ -79,6 +81,8 @@ export function SaleDetailsPage() {
 
     const saleQuery = useSale(id);
     const cancelMutation = useCancelSale();
+    const duplicateMutation = useDuplicateSale();
+    const navigate = useNavigate();
     const updatePaymentMutation = useUpdatePayment();
 
     const paymentsQuery = usePayments({
@@ -140,6 +144,23 @@ const handleEditPayment = async (input: UpdatePaymentInput) => {
         toast({
             variant: 'destructive',
             title: 'فشل التحديث',
+            description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
+        });
+    }
+};
+
+const handleDuplicate = async () => {
+    try {
+        const newSale = await duplicateMutation.mutateAsync(sale.id);
+        toast({
+            title: 'تم نسخ الفاتورة',
+            description: `تم إنشاء فاتورة جديدة برقم ${newSale.invoiceNumber}`,
+        });
+        navigate(`/sales/${newSale.id}`);
+    } catch (err) {
+        toast({
+            variant: 'destructive',
+            title: 'فشل نسخ الفاتورة',
             description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
         });
     }
@@ -218,6 +239,19 @@ actions = {
         <Share2 className="me-2 h-4 w-4" />
             {isSharingPdf ? 'جارٍ الإنشاء...' : 'مشاركة PDF'}
             </Button>
+{
+    !isCancelled && (
+        <Button
+            variant="outline"
+            onClick={handleDuplicate}
+            size="sm"
+            className="flex-1 sm:flex-none"
+            disabled={duplicateMutation.isPending}
+        >
+            <Copy className="me-2 h-4 w-4" />
+            {duplicateMutation.isPending ? 'جارٍ النسخ...' : 'نسخ'}
+        </Button>
+    )}
 {
     !isCancelled && (
         <Button variant="outline" onClick = {() => setEditOpen(true)

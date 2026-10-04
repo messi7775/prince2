@@ -88,6 +88,19 @@ export class SalesController {
     });
   }
 
+  @Post(':id/duplicate')
+  @HttpCode(HttpStatus.CREATED)
+  async duplicate(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+  ) {
+    return this.salesService.duplicate(id, user.userId, {
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+  }
+
   @Patch(':id')
   async update(
     @Param('id') id: string,
