@@ -197,7 +197,7 @@ export class NotificationsService {
         severity: 'critical',
         title: 'فرق صندوق',
         description: `${closingsWithDiff} إغلاق يومي بفرق عن الرصيد المتوقع`,
-        url: '/cash-closings',
+        url: '/cash',
         count: closingsWithDiff,
       });
     }

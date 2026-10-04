@@ -1,3 +1,5 @@
+import { InvoiceStatusBadge } from '../../sales/components/InvoiceStatusBadge';
+import { ActivityTimeline } from '../../../components/activity/ActivityTimeline';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
@@ -318,13 +320,7 @@ export function DistributorDetailsPage() {
                             : '—'}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={
-                              s.status === 'ACTIVE' ? 'success' : 'destructive'
-                            }
-                          >
-                            {s.status === 'ACTIVE' ? 'نشطة' : 'ملغاة'}
-                          </Badge>
+                          <InvoiceStatusBadge sale={s} />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -434,6 +430,8 @@ export function DistributorDetailsPage() {
           />
         </TabsContent>
       </Tabs>
+
+      <ActivityTimeline entityType="Distributor" entityId={d.id} />
 
       <DistributorFormDialog
         open={editOpen}

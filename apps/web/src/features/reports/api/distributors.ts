@@ -5,6 +5,13 @@ export interface DistributorsReportResponse {
   rows: DistributorReportRow[];
 }
 
-export async function fetchDistributorsReport(): Promise<DistributorsReportResponse> {
-  return apiClient.get<DistributorsReportResponse>('/reports/distributors');
+export interface DistributorPerformanceParams {
+  dateFrom?: string;
+  dateTo?: string;
+  sortBy?: 'sales' | 'payments' | 'balance' | 'invoices';
+  sortDir?: 'asc' | 'desc';
+}
+
+export async function fetchDistributorsReport(params: DistributorPerformanceParams = {}): Promise<DistributorsReportResponse> {
+  return apiClient.get<DistributorsReportResponse>('/reports/distributors', { query: { ...params } });
 }

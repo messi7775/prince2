@@ -23,7 +23,8 @@ export const createCashClosingSchema = z.object({
     closingDate: z
         .string()
         .regex(/^\d{4}-\d{2}-\d{2}$/, "تاريخ الإغلاق غير صالح"),
-    actualBalance: moneySchema,
+    // Physical counted balance can legitimately be zero.
+    actualBalance: z.string().trim().regex(/^\d+(\.\d{1,2})?$/, "قيمة مالية غير صحيحة"),
     notes: z.string().trim().max(500).optional().nullable(),
 });
 

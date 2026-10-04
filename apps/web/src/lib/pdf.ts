@@ -137,13 +137,21 @@ export async function generatePdfBlob(
   html: string,
   title: string,
 ): Promise<Blob> {
-  const host = document.createElement('div');
+  // Isolate receipt CSS: PDF body/table rules must never restyle the live app.
+  const host = document.createElement('iframe');
   host.setAttribute('aria-hidden', 'true');
-  host.style.cssText = `position:fixed;top:0;left:-99999px;width:${PDF_WIDTH_PX}px;background:#ffffff;direction:rtl;z-index:-1;`;
-  host.innerHTML = `<style>${PDF_STYLES}</style><div class="pdf-sheet">${html}<div class="doc-footer">Prince Net — تم إنشاء هذا المستند بتاريخ ${new Date().toLocaleString('ar')}</div></div>`;
+  host.style.cssText = `position:fixed;top:0;left:-99999px;width:${PDF_WIDTH_PX}px;height:1123px;border:0;`;
   document.body.appendChild(host);
   try {
-    const canvas = await html2canvas(host, {
+    const doc = host.contentDocument;
+    if (!doc) throw new Error('PDF document unavailable');
+    doc.open();
+    doc.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><style>${PDF_STYLES}</style></head><body><div class="pdf-sheet">${html}<div class="doc-footer">Prince Net — تم إنشاء هذا المستند بتاريخ ${new Date().toLocaleString('ar')}</div></div></body></html>`);
+    doc.close();
+    await doc.fonts.ready;
+    const sheet = doc.querySelector<HTMLElement>('.pdf-sheet');
+    if (!sheet) throw new Error('PDF sheet unavailable');
+    const canvas = await html2canvas(sheet, {
       scale: 2,
       backgroundColor: '#ffffff',
     });

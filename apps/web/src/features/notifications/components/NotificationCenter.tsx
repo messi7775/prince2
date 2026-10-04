@@ -24,7 +24,7 @@ function severityBadgeVariant(
 export function NotificationCenter() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const { data } = useNotifications();
+  const { data, isLoading, isError, refetch } = useNotifications();
 
   const notifications = data?.notifications ?? [];
   const count = data?.count ?? 0;
@@ -55,7 +55,7 @@ export function NotificationCenter() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0">
+      <PopoverContent align="end" className="w-80 max-w-[calc(100vw-2rem)] p-0">
         <div className="border-b px-4 py-3">
           <p className="text-sm font-semibold">التنبيهات</p>
           <p className="text-xs text-muted-foreground">
@@ -63,7 +63,7 @@ export function NotificationCenter() {
           </p>
         </div>
         <div className="max-h-80 overflow-y-auto">
-          {notifications.length === 0 ? (
+          {isLoading ? <p className="p-4 text-sm">جارٍ تحميل التنبيهات...</p> : isError ? <div className="p-4 text-sm" role="alert">تعذّر تحميل التنبيهات <Button variant="outline" size="sm" onClick={() => refetch()}>إعادة المحاولة</Button></div> : notifications.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-muted-foreground">
               لا توجد تنبيهات حاليًا
             </div>

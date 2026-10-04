@@ -1,3 +1,4 @@
+import { dateBoundary, dateRange } from '../common/utils/date-range.util';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '../generated/prisma';
 import type {
@@ -84,8 +85,8 @@ export class CashService {
       ...(query.dateFrom || query.dateTo
         ? {
             movementDate: {
-              ...(query.dateFrom ? { gte: new Date(query.dateFrom) } : {}),
-              ...(query.dateTo ? { lte: new Date(query.dateTo) } : {}),
+              ...(query.dateFrom ? { gte: dateBoundary(query.dateFrom) } : {}),
+              ...(query.dateTo ? { lte: dateBoundary(query.dateTo, true) } : {}),
             },
           }
         : {}),
@@ -125,8 +126,7 @@ export class CashService {
   // ───────────────────────────────────────────────────────────
   async getLedger(query: CashLedgerQuery): Promise<CashLedger> {
     const order: 'asc' | 'desc' = query.order === 'asc' ? 'asc' : 'desc';
-    const dateFrom = query.dateFrom ? new Date(query.dateFrom) : null;
-    const dateTo = query.dateTo ? new Date(query.dateTo) : null;
+    const { from: dateFrom, to: dateTo } = dateRange(query);
 
     // ─── Opening: رصيد كل الحركات قبل dateFrom ───
     let opening = new Prisma.Decimal(0);
@@ -147,13 +147,6 @@ export class CashService {
     }
 
     const where: Prisma.CashMovementWhereInput = {
-      ...(query.direction ? { direction: query.direction } : {}),
-      ...(query.sourceType
-        ? { sourceType: query.sourceType as never }
-        : {}),
-      ...(query.search
-        ? { description: { contains: query.search, mode: 'insensitive' } }
-        : {}),
       ...(dateFrom || dateTo
         ? {
             movementDate: {
@@ -166,8 +159,10 @@ export class CashService {
 
     const movements = await this.prisma.cashMovement.findMany({
       where,
-      orderBy: { movementDate: 'asc' },
+      orderBy: [{ movementDate: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
     });
+
+    const movementMap = new Map(movements.map((movement) => [movement.id, movement]));
 
     // ─── مراجع المصادر (روابط للعمليات الأصلية) ───
     const paymentIds = movements
@@ -279,7 +274,12 @@ export class CashService {
     }
 
     return {
-      entries,
+      entries: entries.filter((entry) => {
+        const movement = movementMap.get(entry.id)!;
+        return (!query.direction || movement.direction === query.direction)
+          && (!query.sourceType || movement.sourceType === query.sourceType)
+          && (!query.search || (movement.description ?? '').toLocaleLowerCase().includes(query.search.toLocaleLowerCase()));
+      }),
       summary: {
         opening: toMoneyStringRequired(opening),
         totalIn: toMoneyStringRequired(totalIn),

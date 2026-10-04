@@ -1,3 +1,4 @@
+import { withSerializableRetry } from '../common/utils/with-serializable-retry';
 import {
   BadRequestException,
   Injectable,
@@ -61,8 +62,8 @@ export class CashClosingsService {
     ownerWithdrawals: Prisma.Decimal;
     expected: Prisma.Decimal;
   }> {
-    const dayStart = new Date(`${closingDate}T00:00:00`);
-    const dayEnd = new Date(`${closingDate}T23:59:59.999`);
+    const dayStart = new Date(`${closingDate}T00:00:00Z`);
+    const dayEnd = new Date(`${closingDate}T23:59:59.999Z`);
 
     const [
       beforeIn,
@@ -121,16 +122,17 @@ export class CashClosingsService {
   }
 
   private validateDate(closingDate: string): void {
-    if (!DATE_REGEX.test(closingDate)) {
+    const parsed = new Date(`${closingDate}T00:00:00.000Z`);
+    if (!DATE_REGEX.test(closingDate) || Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== closingDate) {
       throw new BadRequestException({
         message: 'تاريخ الإغلاق غير صالح (YYYY-MM-DD)',
         code: 'INVALID_CLOSING_DATE',
       });
     }
     const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(
-      today.getMonth() + 1,
-    ).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const todayStr = `${today.getUTCFullYear()}-${String(
+      today.getUTCMonth() + 1,
+    ).padStart(2, '0')}-${String(today.getUTCDate()).padStart(2, '0')}`;
     if (closingDate > todayStr) {
       throw new BadRequestException({
         message: 'لا يمكن إغلاق تاريخ مستقبلي',
@@ -146,7 +148,7 @@ export class CashClosingsService {
     this.validateDate(closingDate);
 
     const existing = await this.prisma.cashClosing.findUnique({
-      where: { closingDate: new Date(`${closingDate}T00:00:00`) },
+      where: { closingDate: new Date(`${closingDate}T00:00:00Z`) },
       select: { id: true },
     });
 
@@ -177,10 +179,10 @@ export class CashClosingsService {
         ? {
             closingDate: {
               ...(query.dateFrom
-                ? { gte: new Date(`${query.dateFrom}T00:00:00`) }
+                ? { gte: new Date(`${query.dateFrom}T00:00:00Z`) }
                 : {}),
               ...(query.dateTo
-                ? { lte: new Date(`${query.dateTo}T00:00:00`) }
+                ? { lte: new Date(`${query.dateTo}T00:00:00Z`) }
                 : {}),
             },
           }
@@ -227,9 +229,9 @@ export class CashClosingsService {
     req: { ip?: string; userAgent?: string },
   ): Promise<CashClosing> {
     this.validateDate(input.closingDate);
-    const closingDate = new Date(`${input.closingDate}T00:00:00`);
+    const closingDate = new Date(`${input.closingDate}T00:00:00Z`);
 
-    const created = await this.prisma.$transaction(async (tx) => {
+    const created = await withSerializableRetry(() => this.prisma.$transaction(async (tx) => {
       const existing = await tx.cashClosing.findUnique({
         where: { closingDate },
         select: { id: true },
@@ -284,7 +286,7 @@ export class CashClosingsService {
       });
 
       return row;
-    });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }));
 
     return {
       id: created.id,

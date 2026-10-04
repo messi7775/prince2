@@ -107,7 +107,7 @@ export function ReportsPage() {
         </TabsContent>
 
         <TabsContent value="distributors">
-          <DistributorsReportTab />
+          <DistributorsReportTab dateFrom={dateFrom} dateTo={dateTo} />
         </TabsContent>
 
         <TabsContent value="expenses">

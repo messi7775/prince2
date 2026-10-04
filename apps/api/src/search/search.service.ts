@@ -151,7 +151,7 @@ export class SearchService {
         title: p.name,
         subtitle: p.price.toString(),
         amount: toMoneyStringRequired(p.price),
-        url: `/packages/${p.id}`,
+        url: `/inventory/${p.id}`,
       })),
 
       ...sales.map((s) => ({
@@ -178,7 +178,7 @@ export class SearchService {
         title: e.description,
         subtitle: e.status,
         amount: toMoneyStringRequired(e.amount),
-        url: `/expenses/${e.id}`,
+        url: '/expenses',
       })),
 
       ...payments.map((p) => ({

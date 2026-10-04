@@ -1,3 +1,4 @@
+import { dateBoundary, dateRange } from '../common/utils/date-range.util';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '../generated/prisma';
 import type {
@@ -312,8 +313,7 @@ export class DistributorsService {
       });
     }
 
-    const dateFrom = query.dateFrom ? new Date(query.dateFrom) : null;
-    const dateTo = query.dateTo ? new Date(query.dateTo) : null;
+    const { from: dateFrom, to: dateTo } = dateRange(query);
     const order: 'asc' | 'desc' = query.order === 'asc' ? 'asc' : 'desc';
 
     // ─── كل الأحداث المؤثرة (ACTIVE) — كامل التاريخ لحساب الافتتاحي ───
@@ -344,6 +344,7 @@ export class DistributorsService {
     ]);
 
     type RawEntry = {
+      id: string;
       date: Date;
       entryType: DistributorStatementEntryType;
       reference: string;
@@ -358,6 +359,7 @@ export class DistributorsService {
 
     for (const sale of sales) {
       raw.push({
+        id: sale.id,
         date: sale.saleDate,
         entryType: sale.status === 'ACTIVE' ? 'SALE' : 'SALE_CANCELLED',
         reference: sale.invoiceNumber,
@@ -372,6 +374,7 @@ export class DistributorsService {
     for (const payment of payments) {
       const active = payment.status === 'ACTIVE' && payment.sale.status === 'ACTIVE';
       raw.push({
+        id: payment.id,
         date: payment.paymentDate,
         entryType: active ? 'PAYMENT' : 'PAYMENT_REVERSED',
         reference: `دفعة — ${payment.sale.invoiceNumber}`,
@@ -440,7 +443,7 @@ export class DistributorsService {
       running = running.plus(debit).minus(credit);
 
       return {
-        id: `${entry.entryType}-${entry.reference}`,
+        id: `${entry.entryType}-${entry.id}`,
         entryType: entry.entryType,
         date: entry.date.toISOString(),
         reference: entry.reference,

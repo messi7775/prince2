@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchDistributorsReport } from '../api/distributors';
+import { fetchDistributorsReport, type DistributorPerformanceParams } from '../api/distributors';
 
-export function useDistributorsReport() {
+export function useDistributorsReport(params: DistributorPerformanceParams = {}) {
   return useQuery({
-    queryKey: ['reports', 'distributors'],
-    queryFn: fetchDistributorsReport,
+    queryKey: ['reports', 'distributors', params],
+    queryFn: () => fetchDistributorsReport(params),
     staleTime: 60_000,
   });
 }

@@ -60,7 +60,7 @@ export function printHTML(html: string, title = 'طباعة') {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${title}</title>
+  <title>${escapePrintText(title)}</title>
   <style>${STYLES}</style>
 </head>
 <body>${html}
@@ -95,13 +95,13 @@ export function buildExpenseReceipt(opts: {
       <p class="doc-subtitle">Prince Net</p>
     </div>
     <div class="info-grid">
-      <div class="info-row"><span class="info-label">التاريخ</span><span class="info-value">${opts.date}</span></div>
-      <div class="info-row"><span class="info-label">التصنيف</span><span class="info-value">${opts.category}</span></div>
-      <div class="info-row"><span class="info-label">الوصف</span><span class="info-value">${opts.description}</span></div>
+      <div class="info-row"><span class="info-label">التاريخ</span><span class="info-value">${escapePrintText(opts.date)}</span></div>
+      <div class="info-row"><span class="info-label">التصنيف</span><span class="info-value">${escapePrintText(opts.category)}</span></div>
+      <div class="info-row"><span class="info-label">الوصف</span><span class="info-value">${escapePrintText(opts.description)}</span></div>
       <div class="info-row"><span class="info-label">الحالة</span><span class="info-value"><span class="badge ${badgeClass}">${statusLabel}</span></span></div>
     </div>
     <div class="total-row"><span>المبلغ الإجمالي</span><span>${opts.amount} ر.ي</span></div>
-    ${opts.notes ? `<div class="notes"><strong>ملاحظات:</strong> ${opts.notes}</div>` : ''}
+    ${opts.notes ? `<div class="notes"><strong>ملاحظات:</strong> ${escapePrintText(opts.notes)}</div>` : ''}
   `;
 }
 
@@ -121,12 +121,12 @@ export function buildWithdrawalReceipt(opts: {
       <p class="doc-subtitle">Prince Net</p>
     </div>
     <div class="info-grid">
-      <div class="info-row"><span class="info-label">التاريخ</span><span class="info-value">${opts.date}</span></div>
-      <div class="info-row"><span class="info-label">السبب</span><span class="info-value">${opts.reason}</span></div>
+      <div class="info-row"><span class="info-label">التاريخ</span><span class="info-value">${escapePrintText(opts.date)}</span></div>
+      <div class="info-row"><span class="info-label">السبب</span><span class="info-value">${escapePrintText(opts.reason)}</span></div>
       <div class="info-row"><span class="info-label">الحالة</span><span class="info-value"><span class="badge ${badgeClass}">${statusLabel}</span></span></div>
     </div>
     <div class="total-row"><span>المبلغ المسحوب</span><span>${opts.amount} ر.ي</span></div>
-    ${opts.notes ? `<div class="notes"><strong>ملاحظات:</strong> ${opts.notes}</div>` : ''}
+    ${opts.notes ? `<div class="notes"><strong>ملاحظات:</strong> ${escapePrintText(opts.notes)}</div>` : ''}
   `;
 }
 
@@ -148,7 +148,7 @@ export function buildSaleReceipt(opts: {
     const itemsRows = opts.items
         .map(
             (item) => `<tr>
-        <td>${item.packageNameSnapshot}</td>
+        <td>${escapePrintText(item.packageNameSnapshot)}</td>
         <td style="text-align:center">${item.quantity}</td>
         <td style="text-align:left">${item.unitPrice}</td>
         <td style="text-align:left">${item.totalPrice}</td>
@@ -157,13 +157,13 @@ export function buildSaleReceipt(opts: {
         .join('');
     return `
     <div class="doc-header">
-      <p class="doc-title">فاتورة ${opts.invoiceNumber}</p>
+      <p class="doc-title">فاتورة ${escapePrintText(opts.invoiceNumber)}</p>
       <p class="doc-subtitle">Prince Net</p>
     </div>
     <div class="info-grid">
-      <div class="info-row"><span class="info-label">رقم الفاتورة</span><span class="info-value">${opts.invoiceNumber}</span></div>
-      <div class="info-row"><span class="info-label">التاريخ</span><span class="info-value">${opts.date}</span></div>
-      <div class="info-row"><span class="info-label">الموزع</span><span class="info-value">${opts.distributorName}</span></div>
+      <div class="info-row"><span class="info-label">رقم الفاتورة</span><span class="info-value">${escapePrintText(opts.invoiceNumber)}</span></div>
+      <div class="info-row"><span class="info-label">التاريخ</span><span class="info-value">${escapePrintText(opts.date)}</span></div>
+      <div class="info-row"><span class="info-label">الموزع</span><span class="info-value">${escapePrintText(opts.distributorName)}</span></div>
       <div class="info-row"><span class="info-label">الحالة</span><span class="info-value"><span class="badge ${badgeClass}">${statusLabel}</span></span></div>
     </div>
     <table>
@@ -177,7 +177,7 @@ export function buildSaleReceipt(opts: {
       <div class="info-row"><span class="info-label">المدفوع</span><span class="info-value">${opts.paidAmount} ر.ي</span></div>
       <div class="info-row"><span class="info-label">المتبقي</span><span class="info-value">${opts.remainingAmount} ر.ي</span></div>
     </div>
-    ${opts.notes ? `<div class="notes"><strong>ملاحظات:</strong> ${opts.notes}</div>` : ''}
+    ${opts.notes ? `<div class="notes"><strong>ملاحظات:</strong> ${escapePrintText(opts.notes)}</div>` : ''}
   `;
 }
 

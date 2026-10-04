@@ -1,3 +1,4 @@
+import { withSerializableRetry } from '../common/utils/with-serializable-retry';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '../generated/prisma';
 import type {
@@ -76,7 +77,7 @@ export class PaymentsService {
     userId: string,
     req: { ip?: string; userAgent?: string },
   ): Promise<Payment> {
-    return this.prisma.$transaction(
+    return withSerializableRetry(() => this.prisma.$transaction(
       async (tx) => {
         // ─── 1. Lock Sale ───
         const locked = await tx.$queryRaw<
@@ -176,7 +177,7 @@ export class PaymentsService {
         isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
         timeout: 8000,
       },
-    ).then((row) => this.toPayment(row));
+    )).then((row) => this.toPayment(row));
   }
 
   // ───────────────────────────────────────────────────────────
@@ -269,7 +270,7 @@ export class PaymentsService {
     userId: string,
     req: { ip?: string; userAgent?: string },
   ): Promise<Payment> {
-    return this.prisma.$transaction(
+    return withSerializableRetry(() => this.prisma.$transaction(
       async (tx) => {
         const existing = await tx.payment.findUnique({
           where: { id: paymentId },
@@ -384,7 +385,7 @@ export class PaymentsService {
         isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
         timeout: 8000,
       },
-    );
+    ));
   }
 
   // ───────────────────────────────────────────────────────────

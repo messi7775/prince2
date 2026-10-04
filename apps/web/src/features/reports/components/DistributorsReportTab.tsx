@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import type { DistributorPerformanceParams } from '../api/distributors';
 import { Users } from 'lucide-react';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
@@ -15,9 +18,11 @@ import { useDistributorsReport } from '../hooks/useDistributorsReport';
 import { formatMoney } from '../../../lib/currency';
 import { cn } from '../../../lib/utils';
 
-export function DistributorsReportTab() {
+export function DistributorsReportTab({ dateFrom, dateTo }: { dateFrom?: string; dateTo?: string }) {
+  const [sortBy, setSortBy] = useState<DistributorPerformanceParams['sortBy']>('sales');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const { data, isLoading, isError, error, refetch } =
-    useDistributorsReport();
+    useDistributorsReport({ dateFrom, dateTo, sortBy, sortDir });
 
   if (isLoading) return <LoadingState />;
   if (isError || !data) {
@@ -42,13 +47,22 @@ export function DistributorsReportTab() {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3 text-sm">
+        <label>ترتيب الأداء <select aria-label="ترتيب الأداء" className="rounded-md border bg-background p-2" value={sortBy} onChange={(e) => setSortBy(e.target.value as DistributorPerformanceParams['sortBy'])}>
+          <option value="sales">المبيعات</option><option value="payments">التحصيلات</option><option value="balance">الرصيد</option><option value="invoices">عدد الفواتير</option>
+        </select></label>
+        <label>الاتجاه <select aria-label="اتجاه ترتيب الأداء" className="rounded-md border bg-background p-2" value={sortDir} onChange={(e) => setSortDir(e.target.value as 'asc' | 'desc')}><option value="desc">تنازلي</option><option value="asc">تصاعدي</option></select></label>
+      </div>
+      <p className="text-xs text-muted-foreground">المبيعات والتحصيلات ضمن الفترة؛ الرصيد المستحق يشمل كامل التاريخ.</p>
       <div className="rounded-md border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>الموزع</TableHead>
-              <TableHead className="hidden sm:table-cell">إجمالي المبيعات</TableHead>
-              <TableHead className="hidden sm:table-cell">إجمالي الدفعات</TableHead>
+              <TableHead >إجمالي المبيعات</TableHead>
+              <TableHead >إجمالي الدفعات</TableHead>
+              <TableHead>عدد الفواتير</TableHead>
+              <TableHead>متوسط الفاتورة</TableHead>
               <TableHead>الرصيد</TableHead>
             </TableRow>
           </TableHeader>
@@ -60,14 +74,16 @@ export function DistributorsReportTab() {
               return (
                 <TableRow key={row.distributorId}>
                   <TableCell className="font-medium">
-                    {row.distributorName}
+                    <Link className="hover:underline" to={`/distributors/${row.distributorId}`}>{row.distributorName}</Link>
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell num">
+                  <TableCell className="num">
                     {formatMoney(row.totalSales)}
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell num">
+                  <TableCell className="num">
                     {formatMoney(row.totalPayments)}
                   </TableCell>
+                  <TableCell className="num">{row.invoiceCount}</TableCell>
+                  <TableCell className="num">{formatMoney(row.avgInvoice ?? '0')}</TableCell>
                   <TableCell
                     className={cn(
                       'num font-medium',

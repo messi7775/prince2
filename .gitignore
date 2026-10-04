@@ -20,8 +20,8 @@ coverage/
 .DS_Store
 Thumbs.db
 
-# Backups
-backups/
+# Backup data only — do not ignore apps/api/src/backups source code.
+/backups/
 
 # Archives
 *.zip

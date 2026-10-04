@@ -1,3 +1,4 @@
+import { dateBoundary, dateRange } from '../common/utils/date-range.util';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '../generated/prisma';
 import type {
@@ -120,8 +121,7 @@ export class ReportsService {
     rows: CashReportRow[];
     summary: CashReportSummary;
   }> {
-    const dateFrom = query.dateFrom ? new Date(query.dateFrom) : null;
-    const dateTo = query.dateTo ? new Date(query.dateTo) : null;
+    const { from: dateFrom, to: dateTo } = dateRange(query);
 
     // Opening: كل الحركات قبل dateFrom
     const openingInAgg = dateFrom
@@ -204,8 +204,7 @@ export class ReportsService {
   async inventoryReport(query: DateRangeQuery): Promise<{
     rows: InventoryReportRow[];
   }> {
-    const dateFrom = query.dateFrom ? new Date(query.dateFrom) : null;
-    const dateTo = query.dateTo ? new Date(query.dateTo) : null;
+    const { from: dateFrom, to: dateTo } = dateRange(query);
 
     const packages = await this.prisma.package.findMany({
       orderBy: { name: 'asc' },
@@ -409,12 +408,13 @@ export class ReportsService {
   // سحوبات المالك ليست مصروفًا تشغيليًا — تُعرض منفصلة.
   // ───────────────────────────────────────────────────────────
   async profitabilityReport(query: DateRangeQuery): Promise<ProfitabilityReport> {
+    dateRange(query);
     const now = new Date();
     const from = query.dateFrom
-      ? new Date(query.dateFrom)
+      ? dateBoundary(query.dateFrom)
       : new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
     const to = query.dateTo
-      ? new Date(query.dateTo)
+      ? dateBoundary(query.dateTo, true)
       : now;
 
     const current = await this.computeProfitability(from, to);
@@ -455,7 +455,7 @@ export class ReportsService {
     if (saleIds.length > 0) {
       const sellMovements = await this.prisma.inventoryMovement.findMany({
         where: {
-          type: 'SELL',
+          type: { in: ['SELL', 'RETURN'] },
           referenceType: 'Sale',
           referenceId: { in: saleIds },
         },
@@ -463,7 +463,7 @@ export class ReportsService {
       });
       for (const m of sellMovements) {
         cogs = cogs.plus(
-          new Prisma.Decimal(Math.abs(m.quantityDelta)).times(m.unitPrice),
+          new Prisma.Decimal(-m.quantityDelta).times(m.unitPrice),
         );
       }
     }
@@ -710,11 +710,12 @@ export class ReportsService {
     query: DateRangeQuery,
     field: 'saleDate' | 'expenseDate' | 'paymentDate' | 'withdrawalDate',
   ): Record<string, { gte?: Date; lte?: Date }> {
+    dateRange(query);
     if (!query.dateFrom && !query.dateTo) return {};
     return {
       [field]: {
-        ...(query.dateFrom ? { gte: new Date(query.dateFrom) } : {}),
-        ...(query.dateTo ? { lte: new Date(query.dateTo) } : {}),
+        ...(query.dateFrom ? { gte: dateBoundary(query.dateFrom) } : {}),
+        ...(query.dateTo ? { lte: dateBoundary(query.dateTo, true) } : {}),
       },
     };
   }

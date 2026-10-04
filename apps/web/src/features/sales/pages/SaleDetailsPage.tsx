@@ -1,3 +1,4 @@
+import { ActivityTimeline } from '../../../components/activity/ActivityTimeline';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
@@ -17,7 +18,7 @@ import type { CancelSaleInput, UpdatePaymentInput } from '@prince-net/validation
 import type { Payment } from '@prince-net/types';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
+import { InvoiceStatusBadge } from '../components/InvoiceStatusBadge';
 import {
     Card,
     CardContent,
@@ -278,9 +279,7 @@ className = "flex-1 sm:flex-none"
         />
 
     < div className = "flex flex-wrap items-center gap-2 mt-2" >
-        <Badge variant={ isCancelled ? 'destructive' : 'success' }>
-        { isCancelled? 'ملغاة': 'نشطة' }
-            </Badge>
+        <InvoiceStatusBadge sale={sale} />
 {
     sale.cancelledAt && (
         <span className="text-xs text-muted-foreground" >
@@ -453,6 +452,8 @@ variant = { hasRemaining? 'destructive': 'default' }
                 </Card>
       )
 }
+
+      <ActivityTimeline entityType="Sale" entityId={sale.id} />
 
 {/* Dialogs */ }
 <CancelSaleDialog

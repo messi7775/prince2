@@ -1,3 +1,4 @@
+import { ActivityTimeline } from '../../../components/activity/ActivityTimeline';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowRight, Pencil, Plus, Printer, Share2 } from 'lucide-react';
@@ -363,6 +364,8 @@ export function LineDetailsPage() {
           )}
         </CardContent>
       </Card>
+
+      <ActivityTimeline entityType="Line" entityId={line.id} />
 
       {/* Dialogs */}
       <LineFormDialog
