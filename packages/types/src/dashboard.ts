@@ -5,4 +5,12 @@ export interface DashboardTopPackage { packageId: UUID; packageName: string; qua
 export interface DashboardDistributorDebt { distributorId: UUID; distributorName: string; balance: MoneyString; }
 export interface DashboardRecentTransaction { id: UUID; type: string; description: string; amount: MoneyString; direction: 'IN' | 'OUT'; createdAt: string; }
 export interface DashboardFinancialSummary { totalPayments: MoneyString; totalExpenses: MoneyString; totalOwnerWithdrawals: MoneyString; cashIn: MoneyString; cashOut: MoneyString; cashBalance: MoneyString; transactionsCount: number; }
-export interface DashboardData extends DashboardSummary { topPackages: DashboardTopPackage[]; distributorDebts: DashboardDistributorDebt[]; recentTransactions: DashboardRecentTransaction[]; financialSummary: DashboardFinancialSummary; }
+export interface DashboardData extends DashboardSummary { topPackages: DashboardTopPackage[]; distributorDebts: DashboardDistributorDebt[]; recentTransactions: DashboardRecentTransaction[]; financialSummary: DashboardFinancialSummary; periodStats: DashboardPeriodStats; series: DashboardSeriesPoint[]; }
+export type DashboardPeriod = 'today' | 'week' | 'month' | 'year';
+export interface DashboardPeriodComparison { sales: MoneyString; collections: MoneyString; expenses: MoneyString; netCashFlow: MoneyString; }
+export interface DashboardPeriodStats extends DashboardPeriodComparison {
+    salesCount: number;
+    previous: DashboardPeriodComparison | null;
+    growth: { sales: number | null; collections: number | null; expenses: number | null; netCashFlow: number | null } | null;
+}
+export interface DashboardSeriesPoint { date: string; sales: MoneyString; collections: MoneyString; }

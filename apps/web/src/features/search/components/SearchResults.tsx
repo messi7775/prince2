@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import {
+  Banknote,
   Package,
   ShoppingCart,
   TrendingDown,
@@ -22,6 +23,7 @@ const GROUP_ORDER: SearchResultType[] = [
   'DISTRIBUTOR',
   'PACKAGE',
   'SALE',
+  'PAYMENT',
   'LINE',
   'EXPENSE',
 ];
@@ -30,6 +32,7 @@ const TYPE_LABELS: Record<SearchResultType, string> = {
   DISTRIBUTOR: 'الموزعون',
   PACKAGE: 'الباقات',
   SALE: 'المبيعات',
+  PAYMENT: 'الدفعات',
   LINE: 'الخطوط',
   EXPENSE: 'المصروفات',
 };
@@ -38,6 +41,7 @@ const TYPE_ICONS: Record<SearchResultType, LucideIcon> = {
   DISTRIBUTOR: Users,
   PACKAGE: Package,
   SALE: ShoppingCart,
+  PAYMENT: Banknote,
   LINE: Wifi,
   EXPENSE: TrendingDown,
 };

@@ -55,6 +55,20 @@ export class DistributorsController {
     return this.distributorsService.getBalance(id);
   }
 
+  @Get(':id/statement')
+  async getStatement(
+    @Param('id') id: string,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+    @Query('order') order?: string,
+  ) {
+    return this.distributorsService.getStatement(id, {
+      ...(dateFrom ? { dateFrom } : {}),
+      ...(dateTo ? { dateTo } : {}),
+      ...(order === 'asc' || order === 'desc' ? { order } : {}),
+    });
+  }
+
   @Get(':id/sales')
   async getSales(
     @Param('id') id: string,

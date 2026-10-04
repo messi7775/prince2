@@ -127,6 +127,48 @@ export class SalesService {
   }
 
   // ───────────────────────────────────────────────────────────
+  // Duplicate — نسخ فاتورة: فاتورة جديدة بنفس الموزع والبنود.
+  // يمر بنفس مسار create بالكامل (تحقق المخزون + FIFO + Audit)
+  // — الفاتورة الملغاة لا يمكن نسخها.
+  // ───────────────────────────────────────────────────────────
+  async duplicate(
+    id: string,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
+  ): Promise<SaleDetails> {
+    const original = await this.prisma.sale.findUnique({
+      where: { id },
+      include: { items: true },
+    });
+    if (!original) {
+      throw new NotFoundException({
+        message: 'الفاتورة غير موجودة',
+        code: 'SALE_NOT_FOUND',
+      });
+    }
+    if (original.status !== 'ACTIVE') {
+      throw new BusinessException(
+        'SALE_CANCELLED',
+        'لا يمكن نسخ فاتورة ملغاة',
+        400,
+      );
+    }
+
+    return this.create(
+      {
+        distributorId: original.distributorId,
+        items: original.items.map((item) => ({
+          packageId: item.packageId,
+          quantity: item.quantity,
+        })),
+        notes: original.notes ?? undefined,
+      },
+      userId,
+      req,
+    );
+  }
+
+  // ───────────────────────────────────────────────────────────
   // Create — Transaction + FIFO
   // ───────────────────────────────────────────────────────────
   async create(

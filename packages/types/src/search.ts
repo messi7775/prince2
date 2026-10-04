@@ -5,7 +5,8 @@ export type SearchResultType =
     | "PACKAGE"
     | "SALE"
     | "LINE"
-    | "EXPENSE";
+    | "EXPENSE"
+    | "PAYMENT";
 
 export interface SearchResult {
     id: UUID;

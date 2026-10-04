@@ -15,3 +15,16 @@ export const manualCashOutSchema = z.object({
 
 export type ManualCashInInput = z.infer<typeof manualCashInSchema>;
 export type ManualCashOutInput = z.infer<typeof manualCashOutSchema>;
+
+/* ─── إغلاق الصندوق اليومي ───
+   actualBalance: الرصيد الفعلي المعدود في الصندوق.
+   expectedBalance يُحسب على السيرفر من cash_movements. */
+export const createCashClosingSchema = z.object({
+    closingDate: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "تاريخ الإغلاق غير صالح"),
+    actualBalance: moneySchema,
+    notes: z.string().trim().max(500).optional().nullable(),
+});
+
+export type CreateCashClosingInput = z.infer<typeof createCashClosingSchema>;

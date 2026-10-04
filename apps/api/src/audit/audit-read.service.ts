@@ -15,6 +15,7 @@ import {
 interface AuditListQuery extends PaginationInput {
   action?: string;
   entityType?: string;
+  entityId?: string;
   userId?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -34,6 +35,7 @@ export class AuditReadService {
     const where: Prisma.AuditLogWhereInput = {
       ...(query.action ? { action: query.action as never } : {}),
       ...(query.entityType ? { entityType: query.entityType } : {}),
+      ...(query.entityId ? { entityId: query.entityId } : {}),
       ...(query.userId ? { userId: query.userId } : {}),
       ...(query.dateFrom || query.dateTo
         ? {

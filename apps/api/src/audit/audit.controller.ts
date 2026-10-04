@@ -9,6 +9,7 @@ import { AuditReadService } from './audit-read.service';
 interface ListQuery extends PaginationInput {
   action?: string;
   entityType?: string;
+  entityId?: string;
   userId?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -23,6 +24,7 @@ export class AuditController {
     @Query(new ZodValidationPipe(paginationSchema)) query: PaginationInput,
     @Query('action') action?: string,
     @Query('entityType') entityType?: string,
+    @Query('entityId') entityId?: string,
     @Query('userId') userId?: string,
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
@@ -31,6 +33,7 @@ export class AuditController {
       ...query,
       ...(action ? { action } : {}),
       ...(entityType ? { entityType } : {}),
+      ...(entityId ? { entityId } : {}),
       ...(userId ? { userId } : {}),
       ...(dateFrom ? { dateFrom } : {}),
       ...(dateTo ? { dateTo } : {}),

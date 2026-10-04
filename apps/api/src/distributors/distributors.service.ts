@@ -3,6 +3,9 @@ import { Prisma } from '../generated/prisma';
 import type {
   Distributor,
   DistributorBalance,
+  DistributorStatement,
+  DistributorStatementEntry,
+  DistributorStatementEntryType,
   PaginatedResponse,
   PaginationMeta,
   Sale,
@@ -279,6 +282,188 @@ export class DistributorsService {
       totalSales: toMoneyStringRequired(totalSales),
       totalPayments: toMoneyStringRequired(totalPayments),
       balance: toMoneyStringRequired(balance),
+    };
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // getStatement — كشف حساب الموزع
+  // يُحسب من الـ Ledger الحالي (sales + payments):
+  //   - فاتورة ACTIVE  → debit (مدين)
+  //   - دفعة ACTIVE     → credit (دائن)
+  //   - فاتورة ملغاة / دفعة معكوسة → تُعرض فقط، بلا أثر على الرصيد.
+  // لا يُخزَّن أي رصيد — balanceAfter تراكمي في الذاكرة.
+  // ───────────────────────────────────────────────────────────
+  async getStatement(
+    id: string,
+    query: {
+      dateFrom?: string;
+      dateTo?: string;
+      order?: 'asc' | 'desc';
+    },
+  ): Promise<DistributorStatement> {
+    const exists = await this.prisma.distributor.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!exists) {
+      throw new NotFoundException({
+        message: 'الموزع غير موجود',
+        code: 'DISTRIBUTOR_NOT_FOUND',
+      });
+    }
+
+    const dateFrom = query.dateFrom ? new Date(query.dateFrom) : null;
+    const dateTo = query.dateTo ? new Date(query.dateTo) : null;
+    const order: 'asc' | 'desc' = query.order === 'asc' ? 'asc' : 'desc';
+
+    // ─── كل الأحداث المؤثرة (ACTIVE) — كامل التاريخ لحساب الافتتاحي ───
+    const [sales, payments] = await Promise.all([
+      this.prisma.sale.findMany({
+        where: { distributorId: id },
+        select: {
+          id: true,
+          invoiceNumber: true,
+          totalAmount: true,
+          status: true,
+          saleDate: true,
+        },
+        orderBy: { saleDate: 'asc' },
+      }),
+      this.prisma.payment.findMany({
+        where: { sale: { distributorId: id } },
+        select: {
+          id: true,
+          amount: true,
+          status: true,
+          paymentDate: true,
+          saleId: true,
+          sale: { select: { id: true, invoiceNumber: true, status: true } },
+        },
+        orderBy: { paymentDate: 'asc' },
+      }),
+    ]);
+
+    type RawEntry = {
+      date: Date;
+      entryType: DistributorStatementEntryType;
+      reference: string;
+      referenceUrl: string;
+      amount: Prisma.Decimal;
+      status: string;
+      effective: boolean;
+      debit: boolean;
+    };
+
+    const raw: RawEntry[] = [];
+
+    for (const sale of sales) {
+      raw.push({
+        date: sale.saleDate,
+        entryType: sale.status === 'ACTIVE' ? 'SALE' : 'SALE_CANCELLED',
+        reference: sale.invoiceNumber,
+        referenceUrl: `/sales/${sale.id}`,
+        amount: sale.totalAmount,
+        status: sale.status,
+        effective: sale.status === 'ACTIVE',
+        debit: true,
+      });
+    }
+
+    for (const payment of payments) {
+      const active = payment.status === 'ACTIVE' && payment.sale.status === 'ACTIVE';
+      raw.push({
+        date: payment.paymentDate,
+        entryType: active ? 'PAYMENT' : 'PAYMENT_REVERSED',
+        reference: `دفعة — ${payment.sale.invoiceNumber}`,
+        referenceUrl: `/sales/${payment.sale.id}`,
+        amount: payment.amount,
+        status: payment.status,
+        effective: active,
+        debit: false,
+      });
+    }
+
+    // ترتيب زمني مستقر: التاريخ ثم النوع (فاتورة قبل دفعة بنفس اللحظة)
+    raw.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    // ─── Opening balance: رصيد الأحداث المؤثرة قبل dateFrom ───
+    let running = new Prisma.Decimal(0);
+    const inRange: RawEntry[] = [];
+
+    for (const entry of raw) {
+      if (!entry.effective) {
+        // الملغاة/المعكوسة قبل الفترة تُتجاهل كليًا
+        if (
+          dateFrom &&
+          entry.date.getTime() < dateFrom.getTime()
+        ) {
+          continue;
+        }
+        if (
+          dateTo &&
+          entry.date.getTime() > dateTo.getTime()
+        ) {
+          continue;
+        }
+        inRange.push(entry);
+        continue;
+      }
+
+      if (dateFrom && entry.date.getTime() < dateFrom.getTime()) {
+        running = entry.debit
+          ? running.plus(entry.amount)
+          : running.minus(entry.amount);
+        continue;
+      }
+      if (dateTo && entry.date.getTime() > dateTo.getTime()) {
+        continue;
+      }
+      inRange.push(entry);
+    }
+
+    const openingBalance = running;
+
+    // ─── بناء الصفوف مع الرصيد التراكمي ───
+    let totalDebit = new Prisma.Decimal(0);
+    let totalCredit = new Prisma.Decimal(0);
+
+    const entries: DistributorStatementEntry[] = inRange.map((entry) => {
+      const debit = entry.effective && entry.debit
+        ? entry.amount
+        : new Prisma.Decimal(0);
+      const credit = entry.effective && !entry.debit
+        ? entry.amount
+        : new Prisma.Decimal(0);
+
+      totalDebit = totalDebit.plus(debit);
+      totalCredit = totalCredit.plus(credit);
+      running = running.plus(debit).minus(credit);
+
+      return {
+        id: `${entry.entryType}-${entry.reference}`,
+        entryType: entry.entryType,
+        date: entry.date.toISOString(),
+        reference: entry.reference,
+        referenceUrl: entry.referenceUrl,
+        debit: toMoneyStringRequired(debit),
+        credit: toMoneyStringRequired(credit),
+        balanceAfter: toMoneyStringRequired(running),
+        status: entry.status,
+      };
+    });
+
+    if (order === 'desc') {
+      entries.reverse();
+    }
+
+    return {
+      entries,
+      summary: {
+        openingBalance: toMoneyStringRequired(openingBalance),
+        totalDebit: toMoneyStringRequired(totalDebit),
+        totalCredit: toMoneyStringRequired(totalCredit),
+        closingBalance: toMoneyStringRequired(running),
+      },
     };
   }
 

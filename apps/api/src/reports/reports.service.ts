@@ -13,6 +13,8 @@ import type {
   CollectionsReportSummary,
   OwnerWithdrawalsReportRow,
   OwnerWithdrawalsReportSummary,
+  ProfitabilityMetrics,
+  ProfitabilityReport,
 } from '@prince-net/types';
 import { PrismaService } from '../prisma/prisma.service';
 import { toMoneyStringRequired } from '../common/utils/money.util';
@@ -282,20 +284,63 @@ export class ReportsService {
   }
 
   // ───────────────────────────────────────────────────────────
-  // Distributor Report
+  // Distributor Performance Report
+  // totalSales/totalPayments/invoiceCount/avgInvoice — داخل الفترة.
+  // balance — الرصيد المستحق الكامل (كل التاريخ، من الـ Ledger).
   // ───────────────────────────────────────────────────────────
-  async distributorsReport(): Promise<{
+  async distributorsReport(query: {
+    dateFrom?: string;
+    dateTo?: string;
+    sortBy?: string;
+    sortDir?: 'asc' | 'desc';
+  }): Promise<{
     rows: DistributorReportRow[];
   }> {
+    const periodFilter = this.buildDateFilter(query, 'saleDate');
+    const paymentPeriodFilter = this.buildDateFilter(query, 'paymentDate');
+
     const distributors = await this.prisma.distributor.findMany({
       orderBy: { name: 'asc' },
       select: { id: true, name: true },
     });
 
-    const rows: DistributorReportRow[] = [];
+    const rowsWithDecimals: Array<{
+      row: DistributorReportRow;
+      sales: Prisma.Decimal;
+      payments: Prisma.Decimal;
+      balance: Prisma.Decimal;
+      invoices: number;
+    }> = [];
 
     for (const d of distributors) {
-      const [salesAgg, paymentsAgg] = await Promise.all([
+      const [salesAgg, salesCount, paymentsAgg] = await Promise.all([
+        this.prisma.sale.aggregate({
+          where: {
+            distributorId: d.id,
+            status: 'ACTIVE',
+            ...periodFilter,
+          },
+          _sum: { totalAmount: true },
+        }),
+        this.prisma.sale.count({
+          where: {
+            distributorId: d.id,
+            status: 'ACTIVE',
+            ...periodFilter,
+          },
+        }),
+        this.prisma.payment.aggregate({
+          where: {
+            status: 'ACTIVE',
+            ...paymentPeriodFilter,
+            sale: { distributorId: d.id, status: 'ACTIVE' },
+          },
+          _sum: { amount: true },
+        }),
+      ]);
+
+      // الرصيد الكامل (كل التاريخ) — من نفس قواعد الـ Ledger
+      const [allSalesAgg, allPaymentsAgg] = await Promise.all([
         this.prisma.sale.aggregate({
           where: { distributorId: d.id, status: 'ACTIVE' },
           _sum: { totalAmount: true },
@@ -311,18 +356,172 @@ export class ReportsService {
 
       const totalSales = salesAgg._sum.totalAmount ?? new Prisma.Decimal(0);
       const totalPayments = paymentsAgg._sum.amount ?? new Prisma.Decimal(0);
-      const balance = totalSales.minus(totalPayments);
+      const invoiceCount = salesCount;
+      const avgInvoice = invoiceCount > 0
+        ? totalSales.div(invoiceCount)
+        : new Prisma.Decimal(0);
 
-      rows.push({
-        distributorId: d.id,
-        distributorName: d.name,
-        totalSales: toMoneyStringRequired(totalSales),
-        totalPayments: toMoneyStringRequired(totalPayments),
-        balance: toMoneyStringRequired(balance),
+      const balance = (
+        allSalesAgg._sum.totalAmount ?? new Prisma.Decimal(0)
+      ).minus(allPaymentsAgg._sum.amount ?? new Prisma.Decimal(0));
+
+      rowsWithDecimals.push({
+        row: {
+          distributorId: d.id,
+          distributorName: d.name,
+          totalSales: toMoneyStringRequired(totalSales),
+          totalPayments: toMoneyStringRequired(totalPayments),
+          balance: toMoneyStringRequired(balance),
+          invoiceCount,
+          avgInvoice: toMoneyStringRequired(avgInvoice),
+        },
+        sales: totalSales,
+        payments: totalPayments,
+        balance,
+        invoices: invoiceCount,
       });
     }
 
-    return { rows };
+    const sortDir = query.sortDir === 'asc' ? 1 : -1;
+    const sortBy = query.sortBy ?? 'sales';
+    rowsWithDecimals.sort((a, b) => {
+      switch (sortBy) {
+        case 'payments':
+          return a.payments.comparedTo(b.payments) * sortDir;
+        case 'balance':
+          return a.balance.comparedTo(b.balance) * sortDir;
+        case 'invoices':
+          return (a.invoices - b.invoices) * sortDir;
+        default:
+          return a.sales.comparedTo(b.sales) * sortDir;
+      }
+    });
+
+    return { rows: rowsWithDecimals.map((r) => r.row) };
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // Profitability Report
+  // Sales = فواتير ACTIVE (وليست التحصيلات)
+  // COGS  = تكلفة البطاقات المباعة من inventory_movements SELL
+  //         المرتبطة بفواتير ACTIVE (FIFO التاريخي)
+  // NetProfit = GrossProfit - OpEx - LineCosts
+  // سحوبات المالك ليست مصروفًا تشغيليًا — تُعرض منفصلة.
+  // ───────────────────────────────────────────────────────────
+  async profitabilityReport(query: DateRangeQuery): Promise<ProfitabilityReport> {
+    const now = new Date();
+    const from = query.dateFrom
+      ? new Date(query.dateFrom)
+      : new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    const to = query.dateTo
+      ? new Date(query.dateTo)
+      : now;
+
+    const current = await this.computeProfitability(from, to);
+
+    // الفترة السابقة: بنفس الطول مباشرة قبل الفترة الحالية
+    const durationMs = to.getTime() - from.getTime();
+    const prevTo = new Date(from.getTime() - 1);
+    const prevFrom = new Date(prevTo.getTime() - durationMs);
+    const previous = await this.computeProfitability(prevFrom, prevTo);
+
+    return {
+      currentPeriod: { from: from.toISOString(), to: to.toISOString() },
+      previousPeriod: { from: prevFrom.toISOString(), to: prevTo.toISOString() },
+      current,
+      previous,
+    };
+  }
+
+  private async computeProfitability(
+    from: Date,
+    to: Date,
+  ): Promise<ProfitabilityMetrics> {
+    // ─── Sales (ACTIVE) ───
+    const salesAgg = await this.prisma.sale.aggregate({
+      where: { status: 'ACTIVE', saleDate: { gte: from, lte: to } },
+      _sum: { totalAmount: true },
+    });
+    const sales = salesAgg._sum.totalAmount ?? new Prisma.Decimal(0);
+
+    // ─── COGS — من حركات SELL للفواتير ACTIVE في الفترة (FIFO) ───
+    const activeSales = await this.prisma.sale.findMany({
+      where: { status: 'ACTIVE', saleDate: { gte: from, lte: to } },
+      select: { id: true },
+    });
+    const saleIds = activeSales.map((s) => s.id);
+
+    let cogs = new Prisma.Decimal(0);
+    if (saleIds.length > 0) {
+      const sellMovements = await this.prisma.inventoryMovement.findMany({
+        where: {
+          type: 'SELL',
+          referenceType: 'Sale',
+          referenceId: { in: saleIds },
+        },
+        select: { quantityDelta: true, unitPrice: true },
+      });
+      for (const m of sellMovements) {
+        cogs = cogs.plus(
+          new Prisma.Decimal(Math.abs(m.quantityDelta)).times(m.unitPrice),
+        );
+      }
+    }
+
+    // ─── Operating Expenses / Line Costs / Collections / Withdrawals ───
+    const [expensesAgg, linePaymentsAgg, collectionsAgg, withdrawalsAgg] =
+      await Promise.all([
+        this.prisma.expense.aggregate({
+          where: { status: 'ACTIVE', expenseDate: { gte: from, lte: to } },
+          _sum: { amount: true },
+        }),
+        this.prisma.linePayment.aggregate({
+          where: { status: 'ACTIVE', paymentDate: { gte: from, lte: to } },
+          _sum: { amount: true },
+        }),
+        this.prisma.payment.aggregate({
+          where: {
+            status: 'ACTIVE',
+            paymentDate: { gte: from, lte: to },
+            sale: { status: 'ACTIVE' },
+          },
+          _sum: { amount: true },
+        }),
+        this.prisma.ownerWithdrawal.aggregate({
+          where: { status: 'ACTIVE', withdrawalDate: { gte: from, lte: to } },
+          _sum: { amount: true },
+        }),
+      ]);
+
+    const operatingExpenses =
+      expensesAgg._sum.amount ?? new Prisma.Decimal(0);
+    const lineCosts = linePaymentsAgg._sum.amount ?? new Prisma.Decimal(0);
+    const collections = collectionsAgg._sum.amount ?? new Prisma.Decimal(0);
+    const ownerWithdrawals =
+      withdrawalsAgg._sum.amount ?? new Prisma.Decimal(0);
+
+    const grossProfit = sales.minus(cogs);
+    const netProfit = grossProfit.minus(operatingExpenses).minus(lineCosts);
+
+    const margin = (value: Prisma.Decimal): number =>
+      sales.isZero()
+        ? 0
+        : Number(
+            value.div(sales).times(100).toDecimal(2).toString(),
+          );
+
+    return {
+      sales: toMoneyStringRequired(sales),
+      cogs: toMoneyStringRequired(cogs),
+      grossProfit: toMoneyStringRequired(grossProfit),
+      operatingExpenses: toMoneyStringRequired(operatingExpenses),
+      lineCosts: toMoneyStringRequired(lineCosts),
+      netProfit: toMoneyStringRequired(netProfit),
+      collections: toMoneyStringRequired(collections),
+      ownerWithdrawals: toMoneyStringRequired(ownerWithdrawals),
+      grossMargin: margin(grossProfit),
+      netMargin: margin(netProfit),
+    };
   }
 
   // ───────────────────────────────────────────────────────────

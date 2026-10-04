@@ -24,6 +24,7 @@ import { SearchModule } from './search/search.module';
 import { BackupsModule } from './backups/backups.module';
 import { SettingsModule } from './settings/settings.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { HealthModule } from './health/health.module';
 import { validateEnv } from './config/env.validation';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
@@ -67,6 +68,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
         BackupsModule,
         SettingsModule,
         DashboardModule,
+        NotificationsModule,
         HealthModule,
     ],
     controllers: [],
