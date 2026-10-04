@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module';
 import { CommonModule } from './common/common.module';
@@ -26,6 +27,7 @@ import { SettingsModule } from './settings/settings.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { HealthModule } from './health/health.module';
+import { SchedulerModule } from './scheduler/scheduler.module';
 import { validateEnv } from './config/env.validation';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -45,6 +47,8 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
                 limit: 120,
             },
         ]),
+
+        ScheduleModule.forRoot(),
 
         PrismaModule,
         CommonModule,
@@ -70,6 +74,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
         DashboardModule,
         NotificationsModule,
         HealthModule,
+        SchedulerModule,
     ],
     controllers: [],
     providers: [

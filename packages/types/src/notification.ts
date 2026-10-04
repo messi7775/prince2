@@ -10,7 +10,8 @@ export type AppNotificationType =
     | 'HIGH_BALANCE'
     | 'LINE_UNPAID'
     | 'CASH_DIFFERENCE'
-    | 'REVERSALS';
+    | 'REVERSALS'
+    | 'MONTHLY_CLOSING_REMINDER';
 
 export type AppNotificationSeverity = 'info' | 'warning' | 'critical';
 

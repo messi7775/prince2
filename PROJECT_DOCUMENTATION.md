@@ -963,6 +963,8 @@ SELECT 'audit_logs', COUNT(*) FROM audit_logs;
   4. **جدول `users` يُدمج بـ upsert (لا يُحذف)** — لأنه مرجع FK لـ backups ولأن جلسة المستخدم الحالي يجب أن تبقى صالحة بعد الاستعادة.
 - **العمليات:** إنشاء نسخة (`POST /backups`)، تنزيل (`GET /backups/:id/download`)، استعادة (`POST /backups/:id/restore`)، حذف نسخة (`DELETE /backups/:id`)، حذف الكل (`DELETE /backups`).
 - **التدقيق:** BACKUP_CREATED / BACKUP_RESTORED / BACKUP_EXPORTED / BACKUP_DELETED / BACKUPS_PURGED.
+- **نسخة أسبوعية تلقائية:** مجدول `apps/api/src/scheduler/` (`@nestjs/schedule`) ينشئ نسخة كاملة تلقائيًا **كل يوم جمعة 00:00 UTC** (cron `0 0 * * 5`, timeZone `UTC`) وتُنسب إلى أقدم مستخدم (الأدمن). أي فشل يُسجَّل في logs ولا يوقف التطبيق.
+- **تذكير الإغلاق الشهري:** سياسة الشهر = تذكير فقط (لا قفل ولا إغلاق تلقائي). طالما أن **آخر يوم من الشهر الماضي بدون إغلاق صندوق**، يظهر تنبيه `MONTHLY_CLOSING_REMINDER` في مركز التنبيهات (يُحسب عند الطلب — بدون تخزين)، ويختفي تلقائيًا بمجرد إغلاق ذلك اليوم يدويًا من `/cash`. (التنفيذ: `apps/api/src/notifications/notifications.service.ts`).
 - **في بيئة Base44:** `BACKUP_DIR=/tmp/prince-net-backups` وهو volume باسم `backups` مُلحق بحاوية API (يستمر بين إعادة التشغيل).
 - **حدود:** هذا النظام ينسخ **بيانات الأعمال** من/إلى نفس التطبيق — لا يُغني عن `pg_dump` الخارجي (الذي ينسخ أيضًا البنية ويصلح للنقل بين خوادم).
 

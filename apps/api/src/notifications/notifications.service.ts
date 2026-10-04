@@ -137,6 +137,23 @@ export class NotificationsService {
       },
     });
 
+    // ─── 7. تذكير الإغلاق الشهري ───
+    // أول كل شهر: إذا لم يُغلق آخر يوم من الشهر الماضي يظهر تذكير
+    // للأدمن بمراجعة وإغلاق الشهر يدويًا — يختفي التذكير تلقائيًا
+    // بمجرد إغلاق آخر يوم.
+    const lastMonthEnd = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0),
+    );
+    const lastMonthEndStr = lastMonthEnd.toISOString().slice(0, 10);
+    const lastMonthName = lastMonthEnd.toLocaleString('ar', {
+      month: 'long',
+      timeZone: 'UTC',
+    });
+    const lastDayClosed = await this.prisma.cashClosing.findUnique({
+      where: { closingDate: new Date(`${lastMonthEndStr}T00:00:00Z`) },
+      select: { id: true },
+    });
+
     // ─── بناء التنبيهات ───
     const notifications: AppNotification[] = [];
 
@@ -211,6 +228,19 @@ export class NotificationsService {
         description: `${recentReversals} عملية عكس/إلغاء خلال آخر 7 أيام`,
         url: '/audit-log',
         count: recentReversals,
+      });
+    }
+
+    if (!lastDayClosed) {
+      notifications.push({
+        id: 'MONTHLY_CLOSING_REMINDER',
+        type: 'MONTHLY_CLOSING_REMINDER',
+        severity: 'info',
+        title: 'تذكير الإغلاق الشهري',
+        description: `راجع وأغلق آخر يوم من ${lastMonthName} (${lastMonthEndStr}) لإتمام الإغلاق الشهري للشهر الماضي`,
+        url: '/cash',
+        count: 1,
+        date: lastMonthEndStr,
       });
     }
 
