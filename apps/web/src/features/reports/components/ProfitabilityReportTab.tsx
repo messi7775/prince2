@@ -103,7 +103,7 @@ export function ProfitabilityReportTab({
       {/* Margins */}
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="sm:pt-6">
             <p className="text-xs text-muted-foreground">المبيعات</p>
             <p className="num text-2xl font-bold">{formatMoney(m.sales)}</p>
             <p className="text-xs text-muted-foreground mt-1">
@@ -113,7 +113,7 @@ export function ProfitabilityReportTab({
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="sm:pt-6">
             <p className="text-xs text-muted-foreground">الربح الإجمالي</p>
             <p className="num text-2xl font-bold text-green-600">
               {formatMoney(m.grossProfit)}
@@ -124,7 +124,7 @@ export function ProfitabilityReportTab({
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="sm:pt-6">
             <p className="text-xs text-muted-foreground">الربح الصافي</p>
             <p
               className={cn(
@@ -140,7 +140,7 @@ export function ProfitabilityReportTab({
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="sm:pt-6">
             <p className="text-xs text-muted-foreground">تكلفة المبيعات (COGS)</p>
             <p className="num text-2xl font-bold text-destructive">
               {formatMoney(m.cogs)}

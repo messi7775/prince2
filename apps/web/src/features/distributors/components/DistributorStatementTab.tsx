@@ -141,7 +141,7 @@ export function DistributorStatementTab({
         <div ref={contentRef} className="space-y-4">
           {/* Summary */}
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="sm:pt-6">
               <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">رصيد افتتاحي</p>

@@ -29,7 +29,7 @@ export function SalesSeriesChart({ data }: SalesSeriesChartProps) {
 
   return (
     <Card>
-      <CardContent className="pt-6">
+      <CardContent className="sm:pt-6">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold">آخر 14 يومًا</h3>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
